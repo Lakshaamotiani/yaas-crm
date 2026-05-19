@@ -36,8 +36,7 @@ const DEAL_COLS =
 
 const QUAL_COLS =
   "lead_id, budget_range, budget_amount, budget_currency, budget_recurrence, " +
-  "decision_maker, timeline, current_editor, videos_per_month, " +
-  "pain_points, goals, fit_score, notes, updated_at";
+  "decision_maker, pain_points, goals, fit_score, notes, updated_at";
 
 const ACTIVITY_COLS =
   "id, lead_id, deal_id, user_id, type, status, title, body, metadata, " +
