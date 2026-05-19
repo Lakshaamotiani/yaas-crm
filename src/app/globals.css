@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+
+    /* Anything that used to be "near black" is now navy — same hue as the
+       sidebar so buttons, avatars, charts, progress fills, focus rings, and
+       body text all read as a cohesive brand color rather than generic black. */
+    --foreground: 222 32% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 32% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 32% 14%;
+
+    --primary: 222 32% 14%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 0 0% 97%;
+    --secondary-foreground: 222 32% 14%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 42%;
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 222 32% 14%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    --ring: 222 32% 14%;
+
+    --radius: 0.4rem;
+
+    /* Sidebar — its own palette so it can read as a navy panel against the
+       neutral content area, independent of light/dark mode. Hue 222° at
+       low saturation, varied lightness for accents. */
+    --sidebar-bg:        222 32% 16%;
+    --sidebar-fg:        220 12% 90%;
+    --sidebar-muted:     220 10% 60%;
+    --sidebar-border:    222 22% 22%;
+    --sidebar-accent:    222 26% 22%;
+    --sidebar-accent-fg: 220 14% 96%;
+
+    /* Stage tones — kept restrained, used as dots not big chips */
+    --stage-new:        220 9%  46%;
+    --stage-contacted:  217 71% 53%;
+    --stage-booked:     262 60% 56%;
+    --stage-held:       199 78% 45%;
+    --stage-proposal:   38  82% 47%;
+    --stage-negotiating:24 85% 50%;
+    --stage-won:        142 62% 42%;
+    --stage-lost:       0   62% 50%;
+  }
+
+  .dark {
+    --background: 0 0% 6%;
+    --foreground: 0 0% 96%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 9%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 96%;
+
+    --muted: 0 0% 11%;
+    --muted-foreground: 0 0% 58%;
+
+    --accent: 0 0% 13%;
+    --accent-foreground: 0 0% 96%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 0 0% 88%;
+
+    /* Sidebar — deeper navy than the content so it reads as a recessed well
+       rather than an elevated panel. Heavy saturation makes the blue
+       perceptible at this lightness; the border carries the structural lines. */
+    --sidebar-bg:        222 50% 5%;
+    --sidebar-fg:        220 14% 92%;
+    --sidebar-muted:     220 10% 56%;
+    --sidebar-border:    222 30% 13%;
+    --sidebar-accent:    222 35% 12%;
+    --sidebar-accent-fg: 220 14% 96%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html, body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "cv11" 1;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* Tighter, more deliberate headings */
+  h1, h2, h3, h4 {
+    letter-spacing: -0.011em;
+  }
+  ::selection {
+    @apply bg-foreground/15;
+  }
+  /* Subtle separator under page headers */
+  hr {
+    @apply border-border;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+
+  /* Subtle inner stroke used on premium cards (very faint top-edge highlight) */
+  .ring-inset-subtle {
+    box-shadow: inset 0 1px 0 0 hsl(var(--foreground) / 0.04);
+  }
+}
