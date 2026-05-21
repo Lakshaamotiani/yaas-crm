@@ -40,16 +40,15 @@ export const STAGE_TONE_OPTIONS: StageTone[] = [
 
 /** YAAS Sales pipeline stages. */
 export const DEFAULT_PIPELINE_STAGES: PipelineStage[] = [
-  { id: "outreach_done",      label: "Outreach Done",      position: 0, kind: "open", tone: "new",         is_default: true },
-  { id: "scoping_call_done",  label: "Scoping Call Done",  position: 1, kind: "open", tone: "contacted",   is_default: false },
-  { id: "discovery_call_done",label: "Discovery Call Done",position: 2, kind: "open", tone: "booked",      is_default: false },
-  { id: "pitch_done",         label: "Pitch Done",         position: 3, kind: "open", tone: "held",        is_default: false },
-  { id: "costing_sent",       label: "Costing Sent",       position: 4, kind: "open", tone: "proposal",    is_default: false },
-  { id: "negotiating",        label: "Negotiating",        position: 5, kind: "open", tone: "negotiating", is_default: false },
-  { id: "closed_won",         label: "Closed",             position: 6, kind: "won",  tone: "won",         is_default: false },
-  { id: "contract",           label: "Contract",           position: 7, kind: "won",  tone: "won",         is_default: false },
-  { id: "operationalized",    label: "Operationalized",    position: 8, kind: "won",  tone: "won",         is_default: false },
-  { id: "closed_lost",        label: "Lost",               position: 9, kind: "lost", tone: "lost",        is_default: false },
+  { id: "outreach_done",  label: "Outreach Done",  position: 0, kind: "open", tone: "new",         is_default: true },
+  { id: "call_done",      label: "Call Done",      position: 1, kind: "open", tone: "contacted",   is_default: false },
+  { id: "pitch_done",     label: "Pitch Done",     position: 2, kind: "open", tone: "held",        is_default: false },
+  { id: "proposal_sent",  label: "Proposal Sent",  position: 3, kind: "open", tone: "proposal",    is_default: false },
+  { id: "negotiating",    label: "Negotiating",    position: 4, kind: "open", tone: "negotiating", is_default: false },
+  { id: "closed_won",     label: "Closed",         position: 5, kind: "won",  tone: "won",         is_default: false },
+  { id: "contract",       label: "Contract",       position: 6, kind: "won",  tone: "won",         is_default: false },
+  { id: "operationalized",label: "Operationalized",position: 7, kind: "won",  tone: "won",         is_default: false },
+  { id: "closed_lost",    label: "Lost",           position: 8, kind: "lost", tone: "lost",        is_default: false },
 ];
 
 // --- Legacy static exports (fallbacks). Prefer the store hooks in
