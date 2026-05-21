@@ -482,7 +482,7 @@ function ReviewStep({
           </div>
         </div>
         {ownerMode === "single" ? (
-          <Select value={singleOwner} onValueChange={setSingleOwner}>
+          <Select value={singleOwner || undefined} onValueChange={setSingleOwner}>
             <SelectTrigger className="h-8 text-[12px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {profiles.map((p) => (

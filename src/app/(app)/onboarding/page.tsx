@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useOnboardingOverview, useStageLabels } from "@/lib/store";
-import { cn, formatDate, initials, relativeTime } from "@/lib/utils";
+import { cn, initials, relativeTime } from "@/lib/utils";
 import { SERVICE_TYPE_LABEL } from "@/lib/constants";
 
 export default function OnboardingPage() {
@@ -77,7 +77,7 @@ export default function OnboardingPage() {
                     <Th>Service</Th>
                     <Th>Stage</Th>
                     <Th>Ops checkpoints</Th>
-                    <Th>Next action</Th>
+                    <Th>Go live timeline</Th>
                     <Th className="text-right">Updated</Th>
                   </tr>
                 </thead>
@@ -140,15 +140,8 @@ export default function OnboardingPage() {
                           </div>
                         </Td>
                         <Td>
-                          <div className="min-w-0">
-                            <div className="truncate text-[12px]">
-                              {onboarding?.next_action ?? <span className="text-muted-foreground">—</span>}
-                            </div>
-                            {onboarding?.next_action_date ? (
-                              <div className="text-[10px] tabular-nums text-muted-foreground">
-                                {formatDate(onboarding.next_action_date, "short")}
-                              </div>
-                            ) : null}
+                          <div className="truncate text-[12px]">
+                            {onboarding?.go_live_timeline ?? <span className="text-muted-foreground">—</span>}
                           </div>
                         </Td>
                         <Td className="text-right text-xs text-muted-foreground">

@@ -70,8 +70,8 @@ function NewLeadInner() {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error("Name is required");
+    if (!companyId && !draftName.trim()) {
+      toast.error("Company name is required");
       return;
     }
 
@@ -86,7 +86,7 @@ function NewLeadInner() {
     }
 
     const id = actions.createLead({
-      name: form.name,
+      name: form.name.trim() || draftName.trim(),
       email: form.email || null,
       phone: form.phone || null,
       role: form.role || null,
@@ -105,7 +105,7 @@ function NewLeadInner() {
     <div className="flex min-h-screen flex-col">
       <PageHeader
         title="New Lead"
-        subtitle="Add a contact. Companies hold the website/social links — you can attach to an existing company or create one inline."
+        subtitle="Start with the company — attach to an existing one or create inline. Contact name is optional."
         actions={
           <Button variant="ghost" size="sm" asChild>
             <Link href="/pipeline"><ArrowLeft /> Back</Link>
@@ -114,25 +114,8 @@ function NewLeadInner() {
       />
       <form onSubmit={onSubmit} className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="grid gap-5">
-          <Section title="Contact">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field label="Full name" required>
-                <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Jane Doe" />
-              </Field>
-              <Field label="Role">
-                <Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="Founder" />
-              </Field>
-              <Field label="Email">
-                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@company.com" />
-              </Field>
-              <Field label="Phone">
-                <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+1 555 0100" />
-              </Field>
-            </div>
-          </Section>
-
           <Section title="Company">
-            <Field label="Company">
+            <Field label="Company name" required>
               <CompanyAutocomplete
                 companyId={companyId}
                 draftName={draftName}
@@ -164,10 +147,27 @@ function NewLeadInner() {
             ) : null}
           </Section>
 
+          <Section title="Contact">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Full name">
+                <Input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Jane Doe" />
+              </Field>
+              <Field label="Role">
+                <Input value={form.role} onChange={(e) => update("role", e.target.value)} placeholder="Founder" />
+              </Field>
+              <Field label="Email">
+                <Input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="jane@company.com" />
+              </Field>
+              <Field label="Phone">
+                <Input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+1 555 0100" />
+              </Field>
+            </div>
+          </Section>
+
           <Section title="Interest">
             <Field label="Service type">
               <Select
-                value={form.service_type}
+                value={form.service_type || undefined}
                 onValueChange={(v) => update("service_type", v)}
               >
                 <SelectTrigger>

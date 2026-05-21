@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Sparkles, GripVertical, Youtube } from "lucide-react";
+import { Sparkles, GripVertical, Youtube } from "lucide-react";
 import { cn, initials, formatMoney, relativeTime } from "@/lib/utils";
 import type { LeadOverview } from "@/lib/types";
 
@@ -33,6 +33,8 @@ export function LeadCard({
   const highFit = typeof lead.fit_score === "number" && lead.fit_score >= 80;
   const companyName = lead.company?.name ?? null;
   const hasYouTube = !!lead.company?.links?.some((l) => l.type === "youtube");
+  const primaryName = companyName ?? lead.name;
+  const contactName = companyName && lead.name !== companyName ? lead.name : null;
 
   return (
     <a
@@ -66,18 +68,17 @@ export function LeadCard({
       <div className="flex items-start gap-2.5">
         <Avatar className="h-7 w-7">
           <AvatarFallback className="bg-muted text-[10px] font-medium">
-            {initials(lead.name)}
+            {initials(primaryName)}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
-            <span className="truncate text-[13px] font-medium tracking-tight">{lead.name}</span>
+            <span className="truncate text-[13px] font-medium tracking-tight">{primaryName}</span>
             {highFit ? <Sparkles className="h-3 w-3 shrink-0 text-amber-500" /> : null}
           </div>
-          {companyName ? (
-            <div className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
-              <Building2 className="h-3 w-3 shrink-0" />
-              <span className="truncate">{companyName}</span>
+          {contactName ? (
+            <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+              {contactName}
             </div>
           ) : null}
         </div>

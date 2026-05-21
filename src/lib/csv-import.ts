@@ -38,7 +38,7 @@ export const IMPORT_FIELD_LABELS: Record<ImportField, string> = {
   submissionId: "Submission ID",
 };
 
-export const REQUIRED_FIELDS: ImportField[] = ["name"];
+export const REQUIRED_FIELDS: ImportField[] = [];
 
 /** Header → field heuristics. First matching header wins per field. */
 const FIELD_MATCHERS: Record<ImportField, RegExp> = {
@@ -73,7 +73,7 @@ export function parseCsv(file: File): Promise<ParseResult> {
       skipEmptyLines: "greedy",
       transformHeader: (h) => h.trim(),
       complete: (res) => {
-        const headers = res.meta.fields ?? [];
+        const headers = (res.meta.fields ?? []).filter((h) => h !== "");
         const autoMapping: Mapping = {};
         for (const field of Object.keys(FIELD_MATCHERS) as ImportField[]) {
           const re = FIELD_MATCHERS[field];
@@ -182,10 +182,7 @@ export function normalizeRows(
     let status: RowStatus = "new";
     let note: string | undefined;
 
-    if (!name) {
-      status = "invalid";
-      note = "Missing name";
-    } else if (submissionId && (existingSubmissionIds.has(submissionId) || seenSubmissionIds.has(submissionId))) {
+    if (submissionId && (existingSubmissionIds.has(submissionId) || seenSubmissionIds.has(submissionId))) {
       status = "duplicate";
       note = "Already imported (submission id)";
     } else if (emailKey && existingEmails.has(emailKey)) {
@@ -201,7 +198,7 @@ export function normalizeRows(
 
     return {
       rowIndex: i,
-      name: name ?? "",
+      name: name || companyName || "",
       email,
       phone: get(row, "phone"),
       role: get(row, "role"),

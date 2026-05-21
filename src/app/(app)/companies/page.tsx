@@ -150,7 +150,7 @@ export default function CompaniesPage() {
                   </Td>
                   <Td>
                     <Select
-                      value={company.priority ?? ""}
+                      value={company.priority ?? undefined}
                       onValueChange={(v) =>
                         actions.updateCompany(company.id, { priority: (v || null) as PriorityLevel | null })
                       }

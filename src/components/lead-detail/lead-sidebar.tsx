@@ -59,24 +59,28 @@ export function LeadSidebar({
         <div className="flex items-start gap-3">
           <Avatar className="h-10 w-10">
             <AvatarFallback className="bg-foreground text-xs font-semibold text-background">
-              {initials(lead.name)}
+              {initials(company?.name ?? lead.name)}
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <EditableText
-              value={lead.name}
-              onSave={(v) => actions.updateLead(lead.id, { name: v })}
-              className="text-base font-semibold tracking-tight"
-            />
+            {company ? (
+              <Link
+                href={`/companies/${company.id}`}
+                className="block truncate text-base font-semibold tracking-tight hover:underline"
+              >
+                {company.name}
+              </Link>
+            ) : (
+              <EditableText
+                value={lead.name}
+                onSave={(v) => actions.updateLead(lead.id, { name: v })}
+                className="text-base font-semibold tracking-tight"
+              />
+            )}
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
               {deal?.stage ? <StageChip stage={deal.stage} /> : null}
-              {company ? (
-                <Link
-                  href={`/companies/${company.id}`}
-                  className="truncate hover:text-foreground hover:underline"
-                >
-                  · {company.name}
-                </Link>
+              {company && lead.name && lead.name !== company.name ? (
+                <span className="truncate">· {lead.name}</span>
               ) : null}
             </div>
           </div>
@@ -86,6 +90,13 @@ export function LeadSidebar({
       <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
         <SectionTitle>Contact</SectionTitle>
         <div className="space-y-2.5">
+          <Row icon={<User2 />} label="Name">
+            <EditableText
+              value={lead.name}
+              placeholder="Add contact name"
+              onSave={(v) => actions.updateLead(lead.id, { name: v || (company?.name ?? lead.name) })}
+            />
+          </Row>
           <Row icon={<Mail />} label="Email">
             <EditableText
               value={lead.email ?? ""}
@@ -100,7 +111,7 @@ export function LeadSidebar({
               onSave={(v) => actions.updateLead(lead.id, { phone: v || null })}
             />
           </Row>
-          <Row icon={<User2 />} label="Role">
+          <Row icon={<Tag />} label="Role">
             <EditableText
               value={lead.role ?? ""}
               placeholder="Founder, Head of Marketing…"
@@ -136,7 +147,7 @@ export function LeadSidebar({
           </KV>
           <KV label="Service type">
             <Select
-              value={lead.service_type ?? ""}
+              value={lead.service_type ?? undefined}
               onValueChange={(v) => actions.updateLead(lead.id, { service_type: (v || null) as any })}
             >
               <SelectTrigger className="h-7 w-[170px] text-xs">

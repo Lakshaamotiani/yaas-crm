@@ -77,7 +77,7 @@ export function FieldInput({
 
     case "select":
       return (
-        <Select value={(value as string) ?? ""} onValueChange={onChange}>
+        <Select value={(value as string) || undefined} onValueChange={onChange}>
           <SelectTrigger className={cn("h-9 text-[13px]", className)}>
             <SelectValue placeholder={field.placeholder ?? "Select…"} />
           </SelectTrigger>

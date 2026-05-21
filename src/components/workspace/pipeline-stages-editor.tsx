@@ -364,7 +364,7 @@ function DeleteStageDialog({
 
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-muted-foreground">Move deals to</label>
-          <Select value={target} onValueChange={setTarget}>
+          <Select value={target || undefined} onValueChange={setTarget}>
             <SelectTrigger className="h-9"><SelectValue placeholder="Select a stage" /></SelectTrigger>
             <SelectContent>
               {others.map((s) => (
