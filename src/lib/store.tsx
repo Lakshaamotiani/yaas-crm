@@ -1075,6 +1075,18 @@ export function useActions() {
   }
 
   return {
+    deleteLead: async (id: string): Promise<void> => {
+      dispatch({ type: "remove_lead", id });
+      try {
+        await bulkDeleteLeads(supabase, [id]);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Unknown error";
+        toast.error(`Delete failed: ${msg}`);
+        // Re-fetch to restore state if delete failed
+        await refresh();
+      }
+    },
+
     updateLead: (id: string, patch: Partial<Lead>) => {
       const prev = state.leads.find((l) => l.id === id);
       if (!prev) return;
