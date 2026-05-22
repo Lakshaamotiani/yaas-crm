@@ -13,6 +13,35 @@ import type { Activity } from "@/lib/types";
 import type { ActivityType } from "@/lib/types";
 import { useActions, useProfiles } from "@/lib/store";
 
+/** Renders plain text with any URLs converted to clickable links. */
+const URL_RE = /https?:\/\/[^\s<>"]+/g;
+
+function LinkedText({ text }: { text: string }) {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  URL_RE.lastIndex = 0;
+  while ((match = URL_RE.exec(text)) !== null) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    const url = match[0];
+    parts.push(
+      <a
+        key={match.index}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all text-foreground underline underline-offset-2 hover:text-primary"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {url}
+      </a>
+    );
+    last = match.index + url.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
 const ICON: Record<ActivityType, React.ComponentType<{ className?: string }>> = {
   note: StickyNote,
   call: Phone,
@@ -171,7 +200,7 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
                   the expandable debrief so we don't double-render it here. */}
               {a.body && a.type !== "stage_change" && a.type !== "call" ? (
                 <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
-                  {a.body}
+                  <LinkedText text={a.body} />
                 </p>
               ) : null}
               {a.metadata && Object.keys(a.metadata).length > 0 ? (
