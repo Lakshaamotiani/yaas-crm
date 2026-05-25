@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, ExternalLink, Building2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Building2, Plus, CalendarClock, Check } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -13,12 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  useLead, useOnboarding, useActions, useStageLabels,
+  useLead, useOnboarding, useActions, useStageLabels, useStoreActivities,
 } from "@/lib/store";
-import { cn, initials } from "@/lib/utils";
+import { cn, formatDate, initials } from "@/lib/utils";
 import { SERVICE_TYPE_LABEL } from "@/lib/constants";
-import type { Onboarding } from "@/lib/types";
+import type { Activity, Onboarding } from "@/lib/types";
 
 export default function OnboardingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -268,8 +269,10 @@ export default function OnboardingDetailPage() {
           </Section>
         </div>
 
-        {/* Right column — document trail */}
+        {/* Right column — document trail + tasks */}
         <div className="space-y-5">
+          <TasksSection leadId={lead.id} />
+
           <Section title="Document trail" tight>
             <DocLink label="Briefing doc"        url={o.briefing_doc_url}      onSave={(v) => update({ briefing_doc_url: v })} />
             <DocLink label="Pitch deck"          url={o.pitch_deck_url}        onSave={(v) => update({ pitch_deck_url: v })} />
@@ -319,6 +322,171 @@ export default function OnboardingDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ---------- Tasks section ----------
+
+function TasksSection({ leadId }: { leadId: string }) {
+  const allActivities = useStoreActivities();
+  const actions = useActions();
+
+  const tasks = React.useMemo(
+    () =>
+      allActivities
+        .filter((a) => a.lead_id === leadId && a.type === "task")
+        .sort((a, b) => {
+          // pending first, then by due date, then created_at
+          if (a.status !== b.status) return a.status === "pending" ? -1 : 1;
+          const da = a.due_at ? +new Date(a.due_at) : Infinity;
+          const db = b.due_at ? +new Date(b.due_at) : Infinity;
+          return da - db;
+        }),
+    [allActivities, leadId],
+  );
+
+  return (
+    <section className="rounded-xl border bg-card">
+      <header className="flex items-center justify-between border-b px-4 py-3">
+        <h2 className="text-[12px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          Tasks
+        </h2>
+        <AddTaskPopover leadId={leadId} />
+      </header>
+      <div className="p-4">
+        {tasks.length === 0 ? (
+          <p className="text-center text-[12px] text-muted-foreground py-3">No tasks yet</p>
+        ) : (
+          <ul className="space-y-2">
+            {tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                onComplete={() => actions.completeActivity(task.id)}
+                onUncomplete={() => actions.uncompleteActivity(task.id)}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function TaskRow({
+  task,
+  onComplete,
+  onUncomplete,
+}: {
+  task: Activity;
+  onComplete: () => void;
+  onUncomplete: () => void;
+}) {
+  const done = task.status === "completed";
+  const overdue =
+    !done && task.due_at && +new Date(task.due_at) < Date.now();
+
+  return (
+    <li className="flex items-start gap-2.5">
+      <button
+        type="button"
+        onClick={done ? onUncomplete : onComplete}
+        className={cn(
+          "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border transition-colors",
+          done
+            ? "border-emerald-500 bg-emerald-500 text-white"
+            : "border-muted-foreground/40 hover:border-foreground/50",
+        )}
+        aria-label={done ? "Mark incomplete" : "Mark complete"}
+      >
+        {done ? <Check className="h-2.5 w-2.5" /> : null}
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className={cn("text-[13px] leading-snug", done && "text-muted-foreground line-through")}>
+          {task.title ?? "Untitled task"}
+        </p>
+        {task.due_at ? (
+          <p className={cn("mt-0.5 text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}>
+            Due {formatDate(new Date(task.due_at), "short")}
+          </p>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
+function AddTaskPopover({ leadId }: { leadId: string }) {
+  const actions = useActions();
+  const [open, setOpen] = React.useState(false);
+  const [title, setTitle] = React.useState("");
+  const [due, setDue] = React.useState<Date | undefined>(undefined);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (open) {
+      setTitle("");
+      setDue(undefined);
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [open]);
+
+  function save() {
+    const cleaned = title.trim();
+    if (!cleaned) {
+      toast.error("Add a task title");
+      inputRef.current?.focus();
+      return;
+    }
+    actions.logActivity({
+      lead_id: leadId,
+      type: "task",
+      title: cleaned,
+      status: "pending",
+      due_at: due ? due.toISOString() : null,
+    });
+    toast.success("Task added");
+    setOpen(false);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-[12px]">
+          <Plus className="h-3.5 w-3.5" /> Add task
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[280px] space-y-3 p-3">
+        <div className="space-y-1.5">
+          <Label className="text-[11px] text-muted-foreground">Task</Label>
+          <Input
+            ref={inputRef}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }}
+            placeholder="e.g. Share INT brief with team"
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[11px] text-muted-foreground">Due date (optional)</Label>
+          <DatePicker
+            value={due}
+            onChange={(d) => setDue(d ?? undefined)}
+            size="sm"
+            align="start"
+            placeholder="Pick a date"
+            clearable
+            className="w-full"
+          />
+        </div>
+        <div className="flex items-center justify-end gap-2 pt-1">
+          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button size="sm" onClick={save}>
+            <CalendarClock className="h-3.5 w-3.5" /> Add task
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
