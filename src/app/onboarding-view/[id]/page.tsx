@@ -150,14 +150,6 @@ export default function OnboardingViewDetailPage() {
             ) : null}
           </Section>
 
-          <Section title="Contact">
-            <div className="grid grid-cols-2 gap-3">
-              <ReadField label="POC name">{o.poc_name ?? lead.name ?? "—"}</ReadField>
-              <ReadField label="WhatsApp">{o.whatsapp_number ?? lead.phone ?? "—"}</ReadField>
-              <ReadField label="Email">{o.email ?? lead.email ?? "—"}</ReadField>
-            </div>
-          </Section>
-
           {o.daily_notes ? (
             <Section title="Notes">
               <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">{o.daily_notes}</p>
@@ -189,15 +181,6 @@ export default function OnboardingViewDetailPage() {
             ))}
           </Section>
 
-          {deal ? (
-            <Section title="Deal">
-              <div className="space-y-2 text-[12px]">
-                <KV label="MRR">₹{deal.value_mrr ?? 0}/mo</KV>
-                {deal.value_one_time ? <KV label="One-time">₹{deal.value_one_time}</KV> : null}
-                <KV label="Stage">{deal.stage.replace(/_/g, " ")}</KV>
-              </div>
-            </Section>
-          ) : null}
         </div>
       </div>
     </div>
