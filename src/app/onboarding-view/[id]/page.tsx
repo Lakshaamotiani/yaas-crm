@@ -161,13 +161,9 @@ export default function OnboardingViewDetailPage() {
         <div className="space-y-5">
           <Section title="Document trail">
             {[
-              { label: "Briefing doc",     url: o.briefing_doc_url },
-              { label: "Pitch deck",       url: o.pitch_deck_url },
-              { label: "Proposal doc",     url: o.proposal_doc_url },
-              { label: "Final MSA",        url: o.final_msa_url },
-              { label: "Signed SOW",       url: o.signed_sow_url },
-              { label: "PO / 1st invoice", url: o.po_first_invoice_url },
-              { label: "Final INT brief",  url: o.final_int_brief_url },
+              { label: "Briefing doc",    url: o.briefing_doc_url },
+              { label: "Pitch deck",      url: o.pitch_deck_url },
+              { label: "Final INT brief", url: o.final_int_brief_url },
             ].map(({ label, url }) => (
               <div key={label} className="flex items-center justify-between gap-2 text-[12px]">
                 <span className="text-muted-foreground">{label}</span>
