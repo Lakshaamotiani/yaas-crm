@@ -8,11 +8,11 @@ import { toast } from "sonner";
 import {
   LayoutDashboard, KanbanSquare, CalendarClock, Building2, Rocket,
   Settings, ChevronsLeft, ChevronsRight, LogOut,
-  Search, Moon, Sun, Monitor,
+  Search, Moon, Sun, Monitor, Inbox,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn, initials } from "@/lib/utils";
-import { useCurrentUser } from "@/lib/store";
+import { useCurrentUser, useOverview } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -25,8 +25,9 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useSidebar } from "@/components/sidebar-context";
 
-const nav = [
+const NAV_ITEMS = [
   { href: "/dashboard",  icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/inbox",      icon: Inbox,           label: "Inbox",     badge: true },
   { href: "/pipeline",   icon: KanbanSquare,    label: "Pipeline" },
   { href: "/onboarding", icon: Rocket,          label: "Onboarding" },
   { href: "/companies",  icon: Building2,       label: "Companies" },
@@ -40,6 +41,61 @@ const EXPANDED_W = "264px";
 function applyWidth(collapsed: boolean) {
   if (typeof document === "undefined") return;
   document.documentElement.style.setProperty("--sb-w", collapsed ? COLLAPSED_W : EXPANDED_W);
+}
+
+function NavItems({ collapsed, pathname }: { collapsed: boolean; pathname: string | null }) {
+  const all = useOverview();
+  const inboxCount = React.useMemo(() => all.filter((l) => !l.owner_id).length, [all]);
+
+  return (
+    <nav className={cn("mt-3 flex flex-1 flex-col gap-1 px-3", collapsed && "md:px-2")}>
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const active =
+          pathname === item.href ||
+          (item.href !== "/dashboard" && pathname?.startsWith(item.href));
+        const count = item.badge ? inboxCount : 0;
+
+        const link = (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex h-10 items-center gap-3 rounded-md px-3 text-[13px] font-medium transition-colors",
+              active
+                ? "bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-fg))]"
+                : "text-[hsl(var(--sidebar-muted))] hover:bg-[hsl(var(--sidebar-accent))]/60 hover:text-[hsl(var(--sidebar-fg))]",
+              collapsed && "md:justify-center md:px-0",
+            )}
+          >
+            <div className="relative shrink-0">
+              <Icon className="h-[18px] w-[18px]" />
+              {count > 0 && collapsed && (
+                <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-bold text-white">
+                  {count > 9 ? "9+" : count}
+                </span>
+              )}
+            </div>
+            <span className={cn("truncate flex-1", collapsed && "md:sr-only")}>{item.label}</span>
+            {count > 0 && !collapsed && (
+              <span className="ml-auto rounded-full bg-amber-500/15 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-amber-600 dark:text-amber-400">
+                {count}
+              </span>
+            )}
+          </Link>
+        );
+
+        return collapsed ? (
+          <Tooltip key={item.href} delayDuration={0}>
+            <TooltipTrigger asChild>{link}</TooltipTrigger>
+            <TooltipContent side="right" className="hidden md:block">{item.label}</TooltipContent>
+          </Tooltip>
+        ) : (
+          link
+        );
+      })}
+    </nav>
+  );
 }
 
 export function AppSidebar() {
@@ -94,40 +150,8 @@ export function AppSidebar() {
       </button>
       <Header collapsed={collapsed} onToggle={toggle} />
 
-      <nav className={cn("mt-3 flex flex-1 flex-col gap-1 px-3", collapsed && "md:px-2")}>
-        {nav.map((item) => {
-          const Icon = item.icon;
-          const active =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname?.startsWith(item.href));
-          const link = (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex h-10 items-center gap-3 rounded-md px-3 text-[13px] font-medium transition-colors",
-                active
-                  ? "bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-fg))]"
-                  : "text-[hsl(var(--sidebar-muted))] hover:bg-[hsl(var(--sidebar-accent))]/60 hover:text-[hsl(var(--sidebar-fg))]",
-                // Collapse styles only apply at md+ — on mobile the drawer is
-                // always full-width and labels are visible.
-                collapsed && "md:justify-center md:px-0"
-              )}
-            >
-              <Icon className="h-[18px] w-[18px] shrink-0" />
-              <span className={cn("truncate", collapsed && "md:sr-only")}>{item.label}</span>
-            </Link>
-          );
-          return collapsed ? (
-            <Tooltip key={item.href} delayDuration={0}>
-              <TooltipTrigger asChild>{link}</TooltipTrigger>
-              <TooltipContent side="right" className="hidden md:block">{item.label}</TooltipContent>
-            </Tooltip>
-          ) : (
-            link
-          );
-        })}
-      </nav>
+      <NavItems collapsed={collapsed} pathname={pathname} />
+
 
       {mounted && <AccountBlock collapsed={collapsed} />}
     </aside>
