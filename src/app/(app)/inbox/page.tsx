@@ -7,7 +7,7 @@ import { Inbox, UserCheck, XCircle, Globe, Youtube, Phone, Mail, Briefcase, Arro
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useOverview, useProfiles, useActions } from "@/lib/store";
+import { useOverview, useProfiles, useActions, useStoreActivities } from "@/lib/store";
 import { cn, relativeTime } from "@/lib/utils";
 import { SERVICE_TYPE_LABEL } from "@/lib/constants";
 
@@ -17,6 +17,21 @@ export default function InboxPage() {
   const all = useOverview();
   const profiles = useProfiles();
   const actions = useActions();
+  const activities = useStoreActivities();
+
+  // Map lead_id → enrichment summary from system activities
+  const enrichmentMap = React.useMemo(() => {
+    const map = new Map<string, { summary: string; fit_score: number }>();
+    for (const a of activities) {
+      if ((a.metadata as any)?.kind === "enrichment") {
+        map.set(a.lead_id, {
+          summary: a.title ?? "",
+          fit_score: (a.metadata as any).fit_score ?? 0,
+        });
+      }
+    }
+    return map;
+  }, [activities]);
 
   // Unassigned leads only, newest first
   const inboxLeads = React.useMemo(
@@ -101,6 +116,7 @@ export default function InboxPage() {
               const serviceDisplay = lead.service_type
                 ? SERVICE_TYPE_LABEL[lead.service_type] ?? lead.service_type
                 : null;
+              const enrichment = enrichmentMap.get(lead.id);
 
               return (
                 <div
@@ -127,6 +143,24 @@ export default function InboxPage() {
                           {relativeTime(lead.created_at)}
                         </span>
                       </div>
+
+                      {/* AI enrichment verdict */}
+                      {enrichment ? (
+                        <div className={cn(
+                          "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium",
+                          enrichment.fit_score >= 50
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                            : enrichment.fit_score >= 25
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                            : "bg-muted text-muted-foreground",
+                        )}>
+                          {enrichment.summary}
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-muted-foreground/50 italic">
+                          Analysing company…
+                        </div>
+                      )}
 
                       {/* Contact details */}
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">

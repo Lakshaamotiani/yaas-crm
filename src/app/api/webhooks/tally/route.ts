@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { enrichCompany } from "@/lib/enrich";
 
 /**
  * POST /api/webhooks/tally
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Create lead — owner_id null so it lands in Inbox
-  const { error } = await sb.from("leads").insert({
+  const { data: newLead, error } = await sb.from("leads").insert({
     name: name.trim(),
     email: email ?? null,
     phone: phone ?? null,
@@ -169,14 +170,46 @@ export async function POST(req: NextRequest) {
     additional_info: additionalInfo,
     source: "yaas_form",
     source_submission_id: submissionId || null,
-    owner_id: null,   // ← unassigned → lands in Inbox
+    owner_id: null,
     status: "active",
     tags: [],
-  });
+  }).select("id").single();
 
   if (error) {
     console.error("Tally webhook: insert lead failed", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // ── Background enrichment (fire-and-forget, never blocks the response) ──
+  // Fetches the company website + a DuckDuckGo snippet, scans for funding /
+  // revenue signals, then writes fit_score + notes to qualifications.
+  const leadId = newLead?.id;
+  if (leadId) {
+    void (async () => {
+      try {
+        const result = await enrichCompany(companyName, companyWebsite, youtubeLink);
+
+        // Upsert qualification record with fit score + enrichment notes
+        await sb.from("qualifications").upsert({
+          lead_id: leadId,
+          fit_score: result.fit_score,
+          notes: [result.summary, ...result.signals].join("\n"),
+        }, { onConflict: "lead_id" });
+
+        // Log a system activity so the enrichment is visible in the timeline
+        await sb.from("activities").insert({
+          lead_id: leadId,
+          type: "system",
+          status: "completed",
+          title: result.summary,
+          body: result.signals.join("\n"),
+          metadata: { kind: "enrichment", fit_score: result.fit_score },
+          completed_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error("Tally enrichment failed:", err);
+      }
+    })();
   }
 
   return NextResponse.json({ ok: true });
