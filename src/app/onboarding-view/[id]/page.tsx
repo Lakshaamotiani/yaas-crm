@@ -50,13 +50,9 @@ export default function OnboardingViewDetailPage() {
   const [onboarding, setOnboarding] = React.useState<Onboarding | null>(null);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    if (!stored) { router.replace("/onboarding-view"); return; }
-    setToken(stored);
-
+  const loadData = React.useCallback((tok: string) => {
     fetch("/api/onboarding-view/data", {
-      headers: { "x-onboarding-token": stored },
+      headers: { "x-onboarding-token": tok },
     })
       .then((r) => r.json())
       .then((data) => {
@@ -71,6 +67,15 @@ export default function OnboardingViewDetailPage() {
       .catch(() => router.replace("/onboarding-view"))
       .finally(() => setLoading(false));
   }, [leadId, router]);
+
+  React.useEffect(() => {
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (!stored) { router.replace("/onboarding-view"); return; }
+    setToken(stored);
+    loadData(stored);
+    const interval = setInterval(() => loadData(stored), 30_000);
+    return () => clearInterval(interval);
+  }, [loadData, router]);
 
   if (loading || !lead) {
     return (

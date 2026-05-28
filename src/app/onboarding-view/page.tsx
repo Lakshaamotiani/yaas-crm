@@ -106,7 +106,7 @@ function OnboardingView({ token }: { token: string }) {
   const [error, setError] = React.useState("");
   const [query, setQuery] = React.useState("");
 
-  React.useEffect(() => {
+  const loadData = React.useCallback(() => {
     fetch("/api/onboarding-view/data", {
       headers: { "x-onboarding-token": token },
     })
@@ -134,6 +134,12 @@ function OnboardingView({ token }: { token: string }) {
       .catch(() => setError("Failed to load data."))
       .finally(() => setLoading(false));
   }, [token]);
+
+  React.useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 30_000);
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const visible = React.useMemo(() => {
     const q = query.trim().toLowerCase();
