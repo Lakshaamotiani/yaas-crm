@@ -350,7 +350,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       const data = await fetchWorkspace(supabase);
-      dispatch({ type: "hydrate", payload: { ...data, onboardings: (data as any).onboardings ?? [], userId } });
+      dispatch({ type: "hydrate", payload: { ...data, userId } });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load workspace";
       toast.error(`Couldn't load workspace: ${msg}`);

@@ -15,7 +15,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
-  Lead, Deal, Activity, Qualification, Profile, LeadOverview, Company,
+  Lead, Deal, Activity, Qualification, Profile, LeadOverview, Company, Onboarding,
 } from "@/lib/types";
 import type { PipelineStage } from "@/lib/constants";
 
@@ -45,6 +45,14 @@ const ACTIVITY_COLS =
 const PROFILE_COLS = "id, full_name, email, avatar_url, role, must_change_password";
 
 const STAGE_COLS = "id, label, position, kind, tone, is_default";
+
+const ONBOARDING_COLS =
+  "lead_id, final_scope_of_work, number_of_videos, format, go_live_timeline, platform, " +
+  "team_required, operationalised, first_video_live_link, finance_team_looped_in, " +
+  "account_manager_assigned, poc_name, lead_source, whatsapp_number, email, " +
+  "next_action, next_action_date, daily_notes, briefing_doc_url, pitch_deck_url, " +
+  "proposal_doc_url, final_msa_url, signed_sow_url, po_first_invoice_url, " +
+  "final_int_brief_url, created_at, updated_at";
 
 // ============================================================================
 // Pipeline stages
@@ -101,6 +109,7 @@ export interface InitialWorkspaceData {
   activities: Activity[];
   profiles: Profile[];
   pipelineStages: PipelineStage[];
+  onboardings: Onboarding[];
 }
 
 const PAGE = 1000;
@@ -130,7 +139,7 @@ async function fetchAll<T>(
 }
 
 export async function fetchWorkspace(sb: SupabaseClient): Promise<InitialWorkspaceData> {
-  const [companies, leads, deals, quals, activities, profiles, pipelineStages] = await Promise.all([
+  const [companies, leads, deals, quals, activities, profiles, pipelineStages, onboardings] = await Promise.all([
     fetchAll<Company>(sb, "companies", COMPANY_COLS, { column: "created_at", ascending: false }),
     fetchAll<Lead>(sb, "leads", LEAD_COLS, { column: "created_at", ascending: false }),
     fetchAll<Deal>(sb, "deals", DEAL_COLS),
@@ -138,6 +147,7 @@ export async function fetchWorkspace(sb: SupabaseClient): Promise<InitialWorkspa
     fetchAll<Activity>(sb, "activities", ACTIVITY_COLS, { column: "created_at", ascending: false }),
     fetchAll<Profile>(sb, "profiles", PROFILE_COLS),
     fetchPipelineStages(sb),
+    fetchAll<Onboarding>(sb, "onboardings", ONBOARDING_COLS),
   ]);
 
   return {
@@ -148,6 +158,7 @@ export async function fetchWorkspace(sb: SupabaseClient): Promise<InitialWorkspa
     activities,
     profiles,
     pipelineStages,
+    onboardings,
   };
 }
 
