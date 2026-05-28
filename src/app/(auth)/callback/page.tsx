@@ -55,7 +55,7 @@ export default function CallbackPage() {
         }
         // Invite / password-reset → force them to set a real password
         if (type === "invite" || type === "recovery") {
-          router.replace("/auth/set-password");
+          router.replace("/set-password");
         } else {
           router.replace("/dashboard");
         }
