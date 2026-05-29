@@ -109,6 +109,7 @@ function OnboardingView({ token }: { token: string }) {
   const loadData = React.useCallback(() => {
     fetch("/api/onboarding-view/data", {
       headers: { "x-onboarding-token": token },
+      cache: "no-store",
     })
       .then((r) => r.json())
       .then((data) => {

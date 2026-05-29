@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+// Never cache this route — data must always be fresh from Supabase.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 /** GET /api/onboarding-view/data
  *  Header: x-onboarding-token: <password>
  *  Returns the full onboarding overview dataset using the service role key so
@@ -34,10 +38,18 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({
-    leads: leadsRes.data,
-    deals: dealsRes.data,
-    companies: companiesRes.data,
-    onboardings: onboardingRes.data,
-  });
+  return NextResponse.json(
+    {
+      leads: leadsRes.data,
+      deals: dealsRes.data,
+      companies: companiesRes.data,
+      onboardings: onboardingRes.data,
+    },
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        "Pragma": "no-cache",
+      },
+    },
+  );
 }

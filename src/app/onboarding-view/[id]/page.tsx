@@ -53,6 +53,7 @@ export default function OnboardingViewDetailPage() {
   const loadData = React.useCallback((tok: string) => {
     fetch("/api/onboarding-view/data", {
       headers: { "x-onboarding-token": tok },
+      cache: "no-store",
     })
       .then((r) => r.json())
       .then((data) => {
