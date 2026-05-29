@@ -87,6 +87,11 @@ export default function OnboardingViewDetailPage() {
   }
 
   const o = onboarding ?? {} as Partial<Onboarding>;
+
+  // Strip "Commercials" section from scope of work in the read-only view
+  const scopeText = o.final_scope_of_work
+    ? o.final_scope_of_work.replace(/\n?commercials?:?[\s\S]*/i, "").trim()
+    : null;
   const checkpoints = [
     { label: "Operationalised",       done: !!o.operationalised },
     { label: "First video live",      done: !!o.first_video_live_link },
@@ -122,7 +127,7 @@ export default function OnboardingViewDetailPage() {
         {/* Left */}
         <div className="space-y-5">
           <Section title="Final scope of work">
-            <ReadField label="Scope">{o.final_scope_of_work ?? "—"}</ReadField>
+            <ReadField label="Scope">{scopeText ?? "—"}</ReadField>
             <div className="grid grid-cols-2 gap-3">
               <ReadField label="Number of videos">{o.number_of_videos ?? "—"}</ReadField>
               <ReadField label="Format">{o.format ?? "—"}</ReadField>
