@@ -21,7 +21,7 @@ import { StageChip } from "@/components/stage-chip";
 import type { Lead, Deal, Qualification, Company } from "@/lib/types";
 import {
   useActions, useProfiles, useTemplates, useCompany, useCompanyAggregate,
-  usePipelineStages,
+  usePipelineStages, useOverview,
 } from "@/lib/store";
 import { LinkList } from "@/components/companies/link-editor";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -426,10 +426,15 @@ function NumberEditable({ value, onSave }: { value: number | null; onSave: (v: n
 function DealForm({ deal }: { deal: Deal }) {
   const actions = useActions();
   const stages = usePipelineStages();
+  const overview = useOverview();
   return (
     <div className="space-y-2.5 text-xs">
       <KV label="Stage">
-        <Select value={deal.stage} onValueChange={(v: any) => actions.moveDeal(deal.id, v, 0)}>
+        <Select value={deal.stage} onValueChange={(v: any) => {
+          // Append to the end of the destination column rather than forcing position 0.
+          const toIndex = overview.filter((l) => l.deal_stage === v && l.deal_id !== deal.id).length;
+          actions.moveDeal(deal.id, v, toIndex);
+        }}>
           <SelectTrigger className="h-7 w-[140px] text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
             {stages.map((s) => (

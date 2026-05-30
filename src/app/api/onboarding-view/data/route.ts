@@ -25,14 +25,15 @@ export async function GET(req: NextRequest) {
   });
 
   // Fetch everything we need for the onboarding list + detail pages.
-  const [leadsRes, dealsRes, companiesRes, onboardingRes] = await Promise.all([
+  const [leadsRes, dealsRes, companiesRes, onboardingRes, stagesRes] = await Promise.all([
     sb.from("leads").select("id, name, email, phone, service_type, company_id"),
     sb.from("deals").select("id, lead_id, stage, value_mrr, value_one_time, value_currency, updated_at"),
     sb.from("companies").select("id, name, domain"),
     sb.from("onboardings").select("*"),
+    sb.from("pipeline_stages").select("id, kind").order("position", { ascending: true }),
   ]);
 
-  for (const res of [leadsRes, dealsRes, companiesRes, onboardingRes]) {
+  for (const res of [leadsRes, dealsRes, companiesRes, onboardingRes, stagesRes]) {
     if (res.error) {
       return NextResponse.json({ error: res.error.message }, { status: 500 });
     }
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
       deals: dealsRes.data,
       companies: companiesRes.data,
       onboardings: onboardingRes.data,
+      pipelineStages: stagesRes.data,
     },
     {
       headers: {

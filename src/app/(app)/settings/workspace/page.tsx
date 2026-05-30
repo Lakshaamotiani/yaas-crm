@@ -58,13 +58,9 @@ export default function WorkspaceSettingsPage() {
         <TabsContent value="general" className="mt-4 space-y-6">
           <ReadOnlyWrap locked={!isAdmin}>
             <Section title="Workspace" description="Shared settings for the YAAS Sales CRM team.">
-              <Card className="space-y-4 p-5">
-                <Field label="Workspace name">
-                  <Input defaultValue="YAAS Sales CRM" />
-                </Field>
-                <Field label="Default currency">
-                  <Input defaultValue="USD" />
-                </Field>
+              <Card className="space-y-2 p-5">
+                <p className="text-[13px] text-muted-foreground">YAAS Sales CRM</p>
+                <p className="text-[12px] text-muted-foreground/60">Additional workspace settings coming soon.</p>
               </Card>
             </Section>
           </ReadOnlyWrap>

@@ -93,18 +93,18 @@ export function KanbanBoard({ leads, visibleStages }: Props) {
     const overStage = (stages.find((s) => s.id === overId)?.id) ?? findStage(overId);
     if (!activeStage || !overStage) return;
 
-    let toIndex = 0;
-    setItems((prev) => {
-      const col = prev[overStage];
-      const activeIdx = col.findIndex((l) => l.id === activeId);
-      const overIdx = col.findIndex((l) => l.id === overId);
-      let next = col;
-      if (activeIdx !== -1 && overIdx !== -1 && activeIdx !== overIdx) {
-        next = arrayMove(col, activeIdx, overIdx);
-      }
-      toIndex = Math.max(0, next.findIndex((l) => l.id === activeId));
-      return { ...prev, [overStage]: next };
-    });
+    // Compute toIndex synchronously from current items before the state update
+    // so moveDeal always gets the correct position (setItems callback is async).
+    const currentCol = items[overStage] ?? [];
+    const activeIdx = currentCol.findIndex((l) => l.id === activeId);
+    const overIdx = currentCol.findIndex((l) => l.id === overId);
+    let reordered = currentCol;
+    if (activeIdx !== -1 && overIdx !== -1 && activeIdx !== overIdx) {
+      reordered = arrayMove(currentCol, activeIdx, overIdx);
+    }
+    const toIndex = Math.max(0, reordered.findIndex((l) => l.id === activeId));
+
+    setItems((prev) => ({ ...prev, [overStage]: reordered }));
 
     const lead = leads.find((l) => l.id === activeId);
     if (lead?.deal_id) actions.moveDeal(lead.deal_id, overStage, toIndex);

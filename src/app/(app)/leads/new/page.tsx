@@ -95,6 +95,7 @@ function NewLeadInner() {
       source: form.source,
       company_id: resolvedCompanyId,
     });
+    if (!id) return;
     toast.success("Lead created");
     router.push(`/leads/${id}`);
   }

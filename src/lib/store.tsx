@@ -27,7 +27,7 @@ import {
   insertLeadRow, updateLeadRow,
   insertCompanyRow, updateCompanyRow, deleteCompanyRow,
   updateDealRow,
-  upsertQualRow,
+  upsertQualRow, upsertOnboardingRow,
   insertActivityRow, updateActivityRow, deleteActivityRow,
   updateProfileRow,
   bulkInsertCompanies, bulkInsertLeads,
@@ -820,7 +820,9 @@ export function useScript(id?: string | null) {
 export function useTodaysTasks(): Activity[] {
   const { state } = useStore();
   return React.useMemo(() => {
-    const cutoff = Date.now() + 24 * 3600000;
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+    const cutoff = endOfToday.getTime();
     return state.activities
       .filter((a) => a.status === "pending" && a.due_at && +new Date(a.due_at) <= cutoff)
       .sort((a, b) => +new Date(a.due_at!) - +new Date(b.due_at!));
@@ -1336,12 +1338,14 @@ export function useActions() {
     advanceStage: (dealId: string) => {
       const d = state.deals.find((x) => x.id === dealId);
       if (!d) return;
-      const order: DealStage[] = [
-        "new", "contacted", "call_booked", "call_held",
-        "proposal_sent", "negotiating", "closed_won",
-      ];
-      const next = order[Math.min(order.indexOf(d.stage) + 1, order.length - 1)];
-      if (next === d.stage) return;
+      // Use live pipeline stages sorted by position — never use hardcoded IDs.
+      const openStages = [...state.pipelineStages]
+        .sort((a, b) => a.position - b.position)
+        .filter((s) => s.kind === "open" || s.kind === "won");
+      const currentIdx = openStages.findIndex((s) => s.id === d.stage);
+      const nextStage = openStages[Math.min(currentIdx + 1, openStages.length - 1)];
+      if (!nextStage || nextStage.id === d.stage) return;
+      const next = nextStage.id as DealStage;
       const idx = state.deals.filter((x) => x.stage === next).length;
       const prevStage = d.stage;
       const prevIndex = d.position;
@@ -1405,10 +1409,16 @@ export function useActions() {
      *  write — there is no separate `createOnboarding` action; the upsert
      *  in the reducer handles bootstrap. */
     updateOnboarding: (lead_id: string, patch: Partial<Onboarding>) => {
+      const prev = state.onboardings.find((o) => o.lead_id === lead_id) ?? null;
       dispatch({ type: "update_onboarding", lead_id, patch });
-      // Persistence to Supabase is a no-op until the onboarding table is
-      // wired up in the api layer. The reducer keeps the in-memory state
-      // consistent so the UI works end-to-end against mock data.
+      void persist(
+        "Update onboarding",
+        () => upsertOnboardingRow(supabase, { lead_id, ...patch }),
+        (onboarding) => dispatch({ type: "update_onboarding", lead_id, patch: onboarding }),
+        () => {
+          if (prev) dispatch({ type: "update_onboarding", lead_id, patch: prev });
+        },
+      );
     },
 
     logActivity: (input: Partial<Activity> & { lead_id: string }): string => {

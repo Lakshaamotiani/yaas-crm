@@ -166,13 +166,22 @@ export async function fetchActivitiesForLead(
   sb: SupabaseClient,
   leadId: string,
 ): Promise<Activity[]> {
-  const { data, error } = await sb
-    .from("activities")
-    .select(ACTIVITY_COLS)
-    .eq("lead_id", leadId)
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as Activity[];
+  // Use paginated fetchAll to avoid Supabase's 1000-row ceiling.
+  const out: Activity[] = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from("activities")
+      .select(ACTIVITY_COLS)
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as unknown as Activity[];
+    out.push(...batch);
+    if (batch.length < PAGE) break;
+  }
+  return out;
 }
 
 export async function fetchDealForLead(
@@ -267,6 +276,20 @@ export async function upsertQualRow(
     .single();
   if (error) throw new Error(error.message);
   return data as unknown as Qualification;
+}
+
+export async function upsertOnboardingRow(
+  sb: SupabaseClient,
+  onboarding: Partial<Onboarding> & { lead_id: string },
+): Promise<Onboarding> {
+  const { updated_at, created_at, ...safe } = onboarding as any;
+  const { data, error } = await sb
+    .from("onboardings")
+    .upsert(safe, { onConflict: "lead_id" })
+    .select(ONBOARDING_COLS)
+    .single();
+  if (error) throw new Error(error.message);
+  return data as unknown as Onboarding;
 }
 
 export async function insertActivityRow(

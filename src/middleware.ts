@@ -37,7 +37,23 @@ export async function middleware(request: NextRequest) {
       },
     });
 
-    await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Protect app routes — redirect to /login if not authenticated.
+    const pathname = request.nextUrl.pathname;
+    const isAppRoute = !pathname.startsWith("/login") &&
+      !pathname.startsWith("/callback") &&
+      !pathname.startsWith("/set-password") &&
+      !pathname.startsWith("/auth/") &&
+      !pathname.startsWith("/onboarding-view") &&
+      !pathname.startsWith("/api/") &&
+      pathname !== "/";
+
+    if (isAppRoute && !user) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      return NextResponse.redirect(loginUrl);
+    }
   } catch (err) {
     // Network blips, bad keys, Supabase outages — any of these would
     // otherwise crash every request through the matcher with a 500. Log

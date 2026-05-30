@@ -65,7 +65,7 @@ export default function InboxPage() {
   }
 
   function disqualify(leadId: string) {
-    actions.updateLead(leadId, { status: "lost" as any });
+    actions.updateLead(leadId, { status: "archived" as any });
     toast("Lead disqualified");
   }
 

@@ -34,7 +34,13 @@ export default function CallbackPage() {
           setStatus("Link invalid or expired. Ask your admin to resend the invite.");
           return;
         }
-        router.replace("/dashboard");
+        // Check if this is an invite or password-reset flow — if so, send to set-password.
+        const type = params.get("type");
+        if (type === "invite" || type === "recovery") {
+          router.replace("/set-password");
+        } else {
+          router.replace("/dashboard");
+        }
         return;
       }
 

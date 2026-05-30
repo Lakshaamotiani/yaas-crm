@@ -119,8 +119,12 @@ function OnboardingView({ token }: { token: string }) {
         const dealMap = new Map<string, Deal>(deals.map((d: Deal) => [d.lead_id, d]));
         const obMap = new Map<string, Onboarding>(onboardings.map((o: Onboarding) => [o.lead_id, o]));
 
-        // Only show leads whose deal is in a "won" stage
-        const wonStages = new Set(["closed_won", "contract", "operationalized"]);
+        // Only show leads whose deal is in a "won" stage (from DB pipeline config)
+        const wonStages = new Set(
+          (data.pipelineStages as Array<{ id: string; kind: string }>)
+            ?.filter((s) => s.kind === "won")
+            .map((s) => s.id) ?? ["closed_won"],
+        );
         const built: Row[] = (leads as Lead[])
           .map((lead) => ({
             lead,
