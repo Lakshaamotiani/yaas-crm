@@ -1,28 +1,17 @@
 "use client";
 
 /**
- * /auth/callback  (real page — NOT a redirect)
+ * /auth/callback
  *
- * Supabase invite/reset emails link here. This must be a real client-side
- * page, not a Next.js redirect, because the invite token arrives as a URL
- * hash fragment (#access_token=...) which is NEVER sent to the server and
- * is therefore silently dropped by server-side redirects.
- *
- * Handles both:
- *   - Hash fragment flow  (#access_token=...&type=invite)
- *   - PKCE code flow      (?code=xxx&type=invite)
- *
- * After exchanging the token/code:
- *   - invite / recovery → /set-password
- *   - everything else   → /dashboard
+ * Handles Supabase invite + password-reset links.
+ * Uses window.location.replace (not Next.js router) for all redirects
+ * so hash fragments and query params are never silently dropped.
  */
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthCallbackPage() {
-  const router = useRouter();
   const [status, setStatus] = React.useState("Verifying your link…");
 
   React.useEffect(() => {
@@ -39,7 +28,9 @@ export default function AuthCallbackPage() {
           return;
         }
         const type = params.get("type");
-        router.replace(type === "invite" || type === "recovery" ? "/set-password" : "/dashboard");
+        window.location.replace(
+          type === "invite" || type === "recovery" ? "/set-password" : "/dashboard"
+        );
         return;
       }
 
@@ -58,16 +49,18 @@ export default function AuthCallbackPage() {
           setStatus("Link invalid or expired. Ask your admin to resend the invite.");
           return;
         }
-        router.replace(type === "invite" || type === "recovery" ? "/set-password" : "/dashboard");
+        window.location.replace(
+          type === "invite" || type === "recovery" ? "/set-password" : "/dashboard"
+        );
         return;
       }
 
-      // Nothing in URL — direct navigation
-      router.replace("/login");
+      // Nothing in URL — direct navigation, send to login
+      window.location.replace("/login");
     }
 
     handle();
-  }, [router]);
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
