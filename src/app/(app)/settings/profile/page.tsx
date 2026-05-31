@@ -3,7 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, Eye, EyeOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import {
 import { useActions, useCurrentUser } from "@/lib/store";
 import { initials } from "@/lib/utils";
 import { AvatarUploadDialog } from "@/components/profile/avatar-upload-dialog";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ProfileSettingsPage() {
   const me = useCurrentUser();
@@ -148,6 +149,12 @@ export default function ProfileSettingsPage() {
 
       <Separator />
 
+      <SettingsSection title="Security" description="Change your login password.">
+        <ChangePasswordCard />
+      </SettingsSection>
+
+      <Separator />
+
       <AvatarUploadDialog
         open={avatarOpen}
         onOpenChange={setAvatarOpen}
@@ -155,6 +162,66 @@ export default function ProfileSettingsPage() {
         onUploaded={handleAvatarUploaded}
       />
     </div>
+  );
+}
+
+function ChangePasswordCard() {
+  const [pw1, setPw1] = React.useState("");
+  const [pw2, setPw2] = React.useState("");
+  const [show, setShow] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (pw1.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (pw1 !== pw2) { setError("Passwords don't match."); return; }
+    setSaving(true);
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.updateUser({ password: pw1 });
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    toast.success("Password updated successfully");
+    setPw1(""); setPw2("");
+  }
+
+  return (
+    <Card className="p-5">
+      <form onSubmit={handleSave} className="space-y-3 max-w-sm">
+        <Field label="New password">
+          <div className="relative">
+            <Input
+              type={show ? "text" : "password"}
+              value={pw1}
+              onChange={(e) => setPw1(e.target.value)}
+              placeholder="Min. 8 characters"
+              className="pr-9"
+              autoComplete="new-password"
+            />
+            <button type="button" tabIndex={-1}
+              onClick={() => setShow((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {show ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+        </Field>
+        <Field label="Confirm new password">
+          <Input
+            type={show ? "text" : "password"}
+            value={pw2}
+            onChange={(e) => setPw2(e.target.value)}
+            placeholder="Repeat password"
+            autoComplete="new-password"
+          />
+        </Field>
+        {error ? <p className="text-[12px] text-destructive">{error}</p> : null}
+        <Button type="submit" size="sm" disabled={saving || !pw1 || !pw2}>
+          {saving ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</> : "Update password"}
+        </Button>
+      </form>
+    </Card>
   );
 }
 
