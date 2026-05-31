@@ -1,69 +1,69 @@
 "use client";
 
 /**
- * Root page — handles Supabase auth redirects directly here.
+ * Root page — single entry point for all Supabase auth redirects.
  *
- * Supabase invite/reset emails redirect to the Site URL (root "/") with
- * the auth token in the hash: /#access_token=...&type=invite
+ * Invite / reset emails redirect here with the token in the URL hash:
+ *   https://yaas-crm.vercel.app/#access_token=...&type=invite
  *
- * We process the token HERE so there are zero intermediate redirects
- * and zero risk of the hash fragment getting dropped.
+ * Strategy:
+ * - Read type from the hash BEFORE Supabase processes it (synchronous)
+ * - Let Supabase auto-exchange the token via detectSessionInUrl
+ * - React to onAuthStateChange — never manually call setSession()
+ * - invite + recovery always → /set-password (never skip to /dashboard)
  */
 
 import * as React from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
-  const [status, setStatus] = React.useState("");
-
   React.useEffect(() => {
-    async function handle() {
-      const supabase = createClient();
+    const supabase = createClient();
 
-      // ── PKCE code flow (?code=xxx) ─────────────────────────────────────
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) { setStatus("Link invalid or expired."); return; }
-        const type = params.get("type");
-        window.location.replace(
-          type === "invite" || type === "recovery" ? "/set-password" : "/dashboard"
-        );
-        return;
-      }
+    // Read URL params synchronously before Supabase consumes the hash
+    const hashParams   = new URLSearchParams(window.location.hash.slice(1));
+    const searchParams = new URLSearchParams(window.location.search);
 
-      // ── Hash / token flow (#access_token=xxx&type=invite) ───────────────
-      const hash = window.location.hash;
-      if (hash && hash.includes("access_token")) {
-        const hp = new URLSearchParams(hash.slice(1));
-        const accessToken  = hp.get("access_token");
-        const refreshToken = hp.get("refresh_token");
-        const type         = hp.get("type");
+    const accessToken = hashParams.get("access_token");
+    const code        = searchParams.get("code");
 
-        if (accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-          if (error) { setStatus("Link invalid or expired."); return; }
-          window.location.replace(
-            type === "invite" || type === "recovery" ? "/set-password" : "/dashboard"
-          );
-          return;
-        }
-      }
-
-      // ── No auth token — normal visit, go to dashboard ──────────────────
+    // No auth token in URL — normal visit, go to dashboard
+    if (!accessToken && !code) {
       window.location.replace("/dashboard");
+      return;
     }
 
-    handle();
+    // Read the token type before Supabase clears the hash
+    const type = hashParams.get("type") || searchParams.get("type");
+    const needsPassword = type === "invite" || type === "recovery";
+
+    // PKCE flow (?code=) — exchange manually, then redirect
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) { window.location.replace("/login"); return; }
+        window.location.replace(needsPassword ? "/set-password" : "/dashboard");
+      });
+      return;
+    }
+
+    // Hash flow — Supabase auto-processes it; we just listen for the result.
+    // PASSWORD_RECOVERY fires for reset links, SIGNED_IN fires for invite links.
+    // Both go to /set-password when needsPassword is true.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        window.location.replace("/set-password");
+      } else if (event === "SIGNED_IN") {
+        window.location.replace(needsPassword ? "/set-password" : "/dashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  return status ? (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <p className="text-[13px] text-destructive">{status}</p>
+  // Show a spinner while the token is being processed
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-foreground" />
     </div>
-  ) : null;
+  );
 }
