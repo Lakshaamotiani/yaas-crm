@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, Rocket, CheckCircle2, Circle } from "lucide-react";
+import { Search, Rocket, CheckCircle2, Circle, Link2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,7 @@ export default function OnboardingPage() {
                     <Th>Ops checkpoints</Th>
                     <Th>Go live timeline</Th>
                     <Th className="text-right">Updated</Th>
+                    <Th className="w-10">{""}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -148,6 +149,18 @@ export default function OnboardingPage() {
                           <span suppressHydrationWarning>
                             {deal ? relativeTime(deal.updated_at) : "—"}
                           </span>
+                        </Td>
+                        <Td>
+                          <a
+                            href={`/onboarding-view/${lead.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open client view"
+                            onClick={(e) => e.stopPropagation()}
+                            className="grid h-6 w-6 place-items-center rounded text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
+                          </a>
                         </Td>
                       </tr>
                     );

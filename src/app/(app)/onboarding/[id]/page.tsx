@@ -84,11 +84,18 @@ export default function OnboardingDetailPage() {
           </span>
         }
         actions={
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/leads/${lead.id}`}>
-              Open lead <ExternalLink className="ml-1 h-3 w-3" />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <a href={`/onboarding-view/${lead.id}`} target="_blank" rel="noopener noreferrer">
+                Client view <ExternalLink className="ml-1 h-3 w-3" />
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/leads/${lead.id}`}>
+                Open lead <ExternalLink className="ml-1 h-3 w-3" />
+              </Link>
+            </Button>
+          </div>
         }
       />
 
