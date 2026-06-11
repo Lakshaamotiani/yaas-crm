@@ -42,15 +42,15 @@ export default function SetPasswordPage() {
     setPending(true);
     const supabase = createClient();
     const { error: err } = await supabase.auth.updateUser({ password });
-    setPending(false);
-
     if (err) {
+      setPending(false);
       setError(err.message);
       return;
     }
-
+    await supabase.auth.signOut();
+    setPending(false);
     setDone(true);
-    setTimeout(() => router.replace("/dashboard"), 1500);
+    setTimeout(() => window.location.replace("/login"), 1500);
   }
 
   if (done) {
@@ -58,7 +58,8 @@ export default function SetPasswordPage() {
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="text-center space-y-3">
           <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" />
-          <p className="text-[15px] font-semibold">Password set! Taking you in…</p>
+          <p className="text-[15px] font-semibold">Password set!</p>
+          <p className="text-[13px] text-muted-foreground">Redirecting to login…</p>
         </div>
       </div>
     );
@@ -122,7 +123,7 @@ export default function SetPasswordPage() {
           ) : null}
 
           <Button type="submit" disabled={pending} className="w-full">
-            {pending ? "Saving…" : "Set password & sign in"}
+            {pending ? "Saving…" : "Set password"}
           </Button>
         </form>
       </div>
