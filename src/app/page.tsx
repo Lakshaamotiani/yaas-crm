@@ -62,18 +62,16 @@ export default function Home() {
     // Fallback: if no auth event fires within 6s (expired/invalid token), go to login
     const timeout = setTimeout(() => go("/login"), 6000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         clearTimeout(timeout);
         go("/set-password");
-      } else if (event === "SIGNED_IN" || (event === "INITIAL_SESSION" && session)) {
+      } else if (event === "SIGNED_IN") {
         clearTimeout(timeout);
         go(needsPassword ? "/set-password" : "/dashboard");
-      } else if (event === "INITIAL_SESSION" && !session) {
-        // No session at all — token was invalid or already used
-        clearTimeout(timeout);
-        go("/login");
       }
+      // INITIAL_SESSION fires before the hash token is processed — ignore it here.
+      // If neither SIGNED_IN nor PASSWORD_RECOVERY fires, the 6s timeout sends to /login.
     });
 
     return () => {
