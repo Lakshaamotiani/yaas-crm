@@ -9,8 +9,9 @@
  * Strategy:
  * - Read type from the hash BEFORE Supabase processes it (synchronous)
  * - Let Supabase auto-exchange the token via detectSessionInUrl
- * - React to onAuthStateChange — never manually call setSession()
+ * - React to onAuthStateChange (SIGNED_IN + INITIAL_SESSION) — never call setSession()
  * - invite + recovery always → /set-password (never skip to /dashboard)
+ * - 6s timeout fallback so the spinner never gets permanently stuck
  */
 
 import * as React from "react";
@@ -46,18 +47,39 @@ export default function Home() {
       return;
     }
 
-    // Hash flow — Supabase auto-processes it; we just listen for the result.
-    // PASSWORD_RECOVERY fires for reset links, SIGNED_IN fires for invite links.
-    // Both go to /set-password when needsPassword is true.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // Hash flow — Supabase auto-processes the token via detectSessionInUrl.
+    // We listen for any session event and redirect accordingly.
+    // INITIAL_SESSION fires when the user is already logged in (existing session).
+    // SIGNED_IN fires when the invite/reset token creates a new session.
+    // PASSWORD_RECOVERY fires specifically for reset-password links.
+    let redirected = false;
+    function go(dest: string) {
+      if (redirected) return;
+      redirected = true;
+      window.location.replace(dest);
+    }
+
+    // Fallback: if no auth event fires within 6s (expired/invalid token), go to login
+    const timeout = setTimeout(() => go("/login"), 6000);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
-        window.location.replace("/set-password");
-      } else if (event === "SIGNED_IN") {
-        window.location.replace(needsPassword ? "/set-password" : "/dashboard");
+        clearTimeout(timeout);
+        go("/set-password");
+      } else if (event === "SIGNED_IN" || (event === "INITIAL_SESSION" && session)) {
+        clearTimeout(timeout);
+        go(needsPassword ? "/set-password" : "/dashboard");
+      } else if (event === "INITIAL_SESSION" && !session) {
+        // No session at all — token was invalid or already used
+        clearTimeout(timeout);
+        go("/login");
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Show a spinner while the token is being processed
