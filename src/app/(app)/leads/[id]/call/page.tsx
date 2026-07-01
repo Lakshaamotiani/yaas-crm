@@ -247,8 +247,8 @@ export default function CallPage() {
       });
       // Only advance the deal stage on the FIRST log of a call — not when
       // someone re-opens a historical call to amend captures.
-      if (outcome === "qualified" && deal && deal.stage === "call_booked") {
-        actions.moveDeal(deal.id, "call_held", 0);
+      if (outcome === "qualified" && deal) {
+        actions.advanceStage(deal.id);
       }
       toast.success("Call logged");
     }

@@ -85,6 +85,7 @@ type Action =
   | { type: "update_qualification"; lead_id: string; patch: Partial<Qualification> }
   | { type: "reconcile_qual"; qual: Qualification }
   | { type: "update_onboarding"; lead_id: string; patch: Partial<Onboarding> }
+  | { type: "remove_onboarding"; lead_id: string }
   | { type: "create_onboarding"; onboarding: Onboarding }
   | { type: "add_activity"; activity: Activity }
   | { type: "set_activities_for_lead"; lead_id: string; activities: Activity[] }
@@ -258,6 +259,8 @@ function reducer(state: State, action: Action): State {
       };
       return { ...state, onboardings: [fresh, ...state.onboardings] };
     }
+    case "remove_onboarding":
+      return { ...state, onboardings: state.onboardings.filter((o) => o.lead_id !== action.lead_id) };
     case "create_onboarding":
       return { ...state, onboardings: [action.onboarding, ...state.onboardings] };
     case "add_activity":
@@ -1343,6 +1346,7 @@ export function useActions() {
         .sort((a, b) => a.position - b.position)
         .filter((s) => s.kind === "open" || s.kind === "won");
       const currentIdx = openStages.findIndex((s) => s.id === d.stage);
+      if (currentIdx === -1) return;
       const nextStage = openStages[Math.min(currentIdx + 1, openStages.length - 1)];
       if (!nextStage || nextStage.id === d.stage) return;
       const next = nextStage.id as DealStage;
@@ -1417,6 +1421,7 @@ export function useActions() {
         (onboarding) => dispatch({ type: "update_onboarding", lead_id, patch: onboarding }),
         () => {
           if (prev) dispatch({ type: "update_onboarding", lead_id, patch: prev });
+          else dispatch({ type: "remove_onboarding", lead_id });
         },
       );
     },
