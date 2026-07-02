@@ -54,11 +54,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           <HeroStat
             className="col-span-2 md:col-span-1"
-            label="ARR"
+            label="Total Revenue Closed"
             value={formatCurrency(m.arr, { compact: true })}
             delta={delta(m.arr, cm?.arr)}
             icon={Trophy}
-            secondary={<span>Annualised closed-won</span>}
+            secondary={<span>MRR ×12 + one-time</span>}
           />
           <Stat
             label="MRR"
@@ -74,7 +74,7 @@ export default function DashboardPage() {
             delta={delta(m.pipelineMrr, cm?.pipelineMrr)}
             compareValue={cm ? formatCurrency(cm.pipelineMrr, { compact: true }) : undefined}
             icon={TrendingUp}
-            hint="open pipeline MRR"
+            hint="open pipeline MRR + one-time"
           />
           <Stat
             label="Deals Closed"
@@ -136,10 +136,11 @@ function withinRange(t: Date, from: Date, to: Date) {
 }
 
 interface DashboardMetrics {
-  /** Sum of MRR across closed_won deals in range, × 12. */
+  /** Annualised MRR + one-time payments from closed-won deals in range. */
   arr: number;
   closedMrr: number;
-  /** Sum of MRR across deals currently in open-kind stages. */
+  closedOneTime: number;
+  /** MRR + one-time from deals currently in open-kind stages. */
   pipelineMrr: number;
   closedCount: number;
   lostCount: number;
@@ -163,12 +164,15 @@ function computeMetrics(
   );
 
   const closedMrr = closedInRange.reduce((s, l) => s + (l.value_mrr ?? 0), 0);
-  const arr = closedMrr * 12;
+  const closedOneTime = closedInRange.reduce((s, l) => s + (l.value_one_time ?? 0), 0);
+  const arr = closedMrr * 12 + closedOneTime;
   const closedCount = closedInRange.length;
   const lostCount = lostInRange.length;
 
   const openLeads = allLeads.filter((l) => roles.isOpen(l.deal_stage));
-  const pipelineMrr = openLeads.reduce((s, l) => s + (l.value_mrr ?? 0), 0);
+  const pipelineMrr = openLeads.reduce(
+    (s, l) => s + (l.value_mrr ?? 0) + (l.value_one_time ?? 0), 0,
+  );
   const openDeals = openLeads.length;
 
   const totalClosed = closedCount + lostCount;
@@ -177,6 +181,7 @@ function computeMetrics(
   return {
     arr,
     closedMrr,
+    closedOneTime,
     pipelineMrr,
     closedCount,
     lostCount,
