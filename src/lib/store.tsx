@@ -100,6 +100,11 @@ type Action =
   | { type: "update_profile"; profile: Profile }
   | { type: "set_pipeline_stages"; stages: PipelineStage[] };
 
+// Tracks in-flight company inserts so createLead can await them before
+// inserting the lead row — prevents FK constraint violations when both
+// are created together on the new-lead form.
+const pendingCompanyInserts = new Map<string, Promise<unknown>>();
+
 const emptyState: State = {
   companies: [],
   leads: [],
@@ -827,8 +832,24 @@ export function useTodaysTasks(): Activity[] {
     endOfToday.setHours(23, 59, 59, 999);
     const cutoff = endOfToday.getTime();
     return state.activities
-      .filter((a) => a.status === "pending" && a.due_at && +new Date(a.due_at) <= cutoff)
+      .filter((a) => a.type === "task" && a.status === "pending" && a.due_at && +new Date(a.due_at) <= cutoff)
       .sort((a, b) => +new Date(a.due_at!) - +new Date(b.due_at!));
+  }, [state.activities]);
+}
+
+/** All pending tasks regardless of due date — used by the /tasks page. */
+export function useAllPendingTasks(): Activity[] {
+  const { state } = useStore();
+  return React.useMemo(() => {
+    return state.activities
+      .filter((a) => a.type === "task" && a.status === "pending")
+      .sort((a, b) => {
+        // Nulls last, then ascending by due_at
+        if (!a.due_at && !b.due_at) return 0;
+        if (!a.due_at) return 1;
+        if (!b.due_at) return -1;
+        return +new Date(a.due_at) - +new Date(b.due_at);
+      });
   }, [state.activities]);
 }
 
@@ -1188,6 +1209,11 @@ export function useActions() {
 
       (async () => {
         try {
+          // If the company was just created optimistically, wait for its DB
+          // insert to land before inserting the lead — avoids FK violation.
+          if (lead.company_id) {
+            await pendingCompanyInserts.get(lead.company_id);
+          }
           await insertLeadRow(supabase, {
             id,
             owner_id: lead.owner_id,
@@ -1582,7 +1608,7 @@ export function useActions() {
         updated_at: now,
       };
       dispatch({ type: "create_company", company });
-      void persist(
+      const companyInsert = persist(
         "Create company",
         () => insertCompanyRow(supabase, {
           id: company.id,
@@ -1597,7 +1623,8 @@ export function useActions() {
         }),
         (c) => dispatch({ type: "reconcile_company", company: c }),
         () => dispatch({ type: "delete_company", id }),
-      );
+      ).finally(() => pendingCompanyInserts.delete(id));
+      pendingCompanyInserts.set(id, companyInsert);
       return id;
     },
 
@@ -1623,7 +1650,7 @@ export function useActions() {
         updated_at: now,
       };
       dispatch({ type: "create_company", company });
-      void persist(
+      const companyInsert2 = persist(
         "Create company",
         () => insertCompanyRow(supabase, {
           id: company.id,
@@ -1638,7 +1665,8 @@ export function useActions() {
         }),
         (c) => dispatch({ type: "reconcile_company", company: c }),
         () => dispatch({ type: "delete_company", id }),
-      );
+      ).finally(() => pendingCompanyInserts.delete(id));
+      pendingCompanyInserts.set(id, companyInsert2);
       return id;
     },
 
