@@ -105,6 +105,11 @@ type Action =
 // are created together on the new-lead form.
 const pendingCompanyInserts = new Map<string, Promise<unknown>>();
 
+// Tracks in-flight lead creations (lead_id → real Deal once bootstrap trigger runs).
+// moveDeal awaits this when the deal is still optimistic so updateDealRow
+// uses the real server-side deal id rather than the optimistic placeholder.
+const pendingLeadCreates = new Map<string, Promise<Deal | null>>();
+
 const emptyState: State = {
   companies: [],
   leads: [],
@@ -1207,7 +1212,7 @@ export function useActions() {
       };
       dispatch({ type: "create_lead", lead, deal: optimisticDeal, qualification: optimisticQual });
 
-      (async () => {
+      const leadCreatePromise = (async (): Promise<Deal | null> => {
         try {
           // If the company was just created optimistically, wait for its DB
           // insert to land before inserting the lead — avoids FK violation.
@@ -1238,12 +1243,17 @@ export function useActions() {
           if (deal) dispatch({ type: "reconcile_deal", deal });
           if (qual) dispatch({ type: "reconcile_qual", qual });
           dispatch({ type: "set_activities_for_lead", lead_id: id, activities });
+          return deal;
         } catch (err) {
           const msg = err instanceof Error ? err.message : "Unknown error";
           toast.error(`Create lead failed: ${msg}`);
           dispatch({ type: "remove_lead", id });
+          return null;
+        } finally {
+          pendingLeadCreates.delete(id);
         }
       })();
+      pendingLeadCreates.set(id, leadCreatePromise);
 
       return id;
     },
@@ -1338,7 +1348,14 @@ export function useActions() {
 
       void (async () => {
         try {
-          const deal = await updateDealRow(supabase, id, { stage: toStage, position: toIndex });
+          // If this deal's lead was just created, wait for the real deal id
+          // from the bootstrap trigger before trying to update it in the DB.
+          let realDealId = id;
+          if (pendingLeadCreates.has(prev.lead_id)) {
+            const realDeal = await pendingLeadCreates.get(prev.lead_id);
+            if (realDeal) realDealId = realDeal.id;
+          }
+          const deal = await updateDealRow(supabase, realDealId, { stage: toStage, position: toIndex });
           dispatch({ type: "reconcile_deal", deal });
           if (toStage !== prevStage) {
             const activities = await fetchActivitiesForLead(supabase, deal.lead_id);
