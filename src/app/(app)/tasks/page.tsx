@@ -5,15 +5,13 @@ import Link from "next/link";
 import { CheckCircle2, Circle, ExternalLink, Undo2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { useActions, useOverview } from "@/lib/store";
-import { useTodaysTasks } from "@/lib/store";
-import { useStoreActivities } from "@/lib/store";
+import { useActions, useOverview, useAllPendingTasks, useStoreActivities } from "@/lib/store";
 import { cn, formatDateTime, relativeTime } from "@/lib/utils";
 
 const RECENT_COMPLETED_WINDOW_MS = 24 * 60 * 60 * 1000; // 24h
 
 export default function TasksPage() {
-  const pending = useTodaysTasks();
+  const pending = useAllPendingTasks();
   const allActivities = useStoreActivities();
   const leads = useOverview();
   const actions = useActions();
@@ -68,7 +66,7 @@ export default function TasksPage() {
                     <li key={t.id} className="group flex items-center gap-3 px-4 py-3">
                       <button
                         onClick={() => actions.completeActivity(t.id)}
-                        className="text-muted-foreground hover:text-foreground"
+                        className="-my-1 -ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:bg-accent"
                         aria-label="Mark task done"
                       >
                         <Circle className="h-4 w-4 group-hover:hidden" />
@@ -77,17 +75,23 @@ export default function TasksPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="truncate text-sm">{t.title ?? "Task"}</span>
-                          <span
-                            suppressHydrationWarning
-                            className={cn(
-                              "rounded px-1 py-0.5 text-[10px]",
-                              new Date(t.due_at!) < new Date()
-                                ? "bg-stage-lost/10 text-stage-lost"
-                                : "bg-muted text-muted-foreground",
-                            )}
-                          >
-                            Due {formatDateTime(t.due_at)}
-                          </span>
+                          {t.due_at ? (
+                            <span
+                              suppressHydrationWarning
+                              className={cn(
+                                "rounded px-1 py-0.5 text-[10px]",
+                                new Date(t.due_at) < new Date()
+                                  ? "bg-stage-lost/10 text-stage-lost"
+                                  : "bg-muted text-muted-foreground",
+                              )}
+                            >
+                              Due {formatDateTime(t.due_at)}
+                            </span>
+                          ) : (
+                            <span className="rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                              No due date
+                            </span>
+                          )}
                         </div>
                         {t.body ? (
                           <p className="mt-0.5 text-[11px] text-muted-foreground">{t.body}</p>
