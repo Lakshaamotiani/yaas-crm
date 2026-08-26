@@ -123,7 +123,7 @@ function OnboardingView({ token }: { token: string }) {
         const wonStages = new Set(
           (data.pipelineStages as Array<{ id: string; kind: string }>)
             ?.filter((s) => s.kind === "won")
-            .map((s) => s.id) ?? ["closed_won"],
+            .map((s) => s.id) ?? ["email_confirmation"],
         );
         const built: Row[] = (leads as Lead[])
           .map((lead) => ({

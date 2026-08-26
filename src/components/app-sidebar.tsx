@@ -144,7 +144,7 @@ export function AppSidebar() {
         type="button"
         onClick={() => setMobileOpen(false)}
         aria-label="Close navigation"
-        className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-md text-[hsl(var(--sidebar-muted))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-fg))] md:hidden"
+        className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-md text-[hsl(var(--sidebar-muted))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-fg))] active:bg-[hsl(var(--sidebar-accent))] md:hidden"
       >
         <X className="h-4 w-4" />
       </button>

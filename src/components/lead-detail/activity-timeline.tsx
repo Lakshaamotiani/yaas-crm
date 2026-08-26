@@ -174,7 +174,7 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
                       onClick={() => actions.undoFromAudit(a.id)}
                       aria-label="Undo"
                       title="Undo this change"
-                      className="grid h-5 w-5 place-items-center rounded text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+                      className="grid h-8 w-8 place-items-center rounded text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground active:bg-accent"
                     >
                       <Undo2 className="h-3 w-3" />
                     </button>
@@ -185,7 +185,7 @@ export function ActivityTimeline({ activities }: { activities: Activity[] }) {
                       onClick={() => toggleExpand(a.id)}
                       aria-label={isExpanded ? "Hide call detail" : "Show call detail"}
                       aria-expanded={isExpanded}
-                      className="grid h-5 w-5 place-items-center rounded text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+                      className="grid h-8 w-8 place-items-center rounded text-muted-foreground/70 transition-colors hover:bg-accent hover:text-foreground active:bg-accent"
                     >
                       <ChevronDown
                         className={cn("h-3.5 w-3.5 transition-transform", isExpanded && "rotate-180")}

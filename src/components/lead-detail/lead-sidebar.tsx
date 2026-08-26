@@ -16,6 +16,9 @@ import { Separator } from "@/components/ui/separator";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StageChip } from "@/components/stage-chip";
 import type { Lead, Deal, Qualification, Company } from "@/lib/types";
@@ -140,17 +143,47 @@ export function LeadSidebar({
         <SectionTitle>Meta</SectionTitle>
         <div className="space-y-2.5 text-xs">
           <KV label="Owner">
-            <div className="flex items-center gap-1.5">
-              <Avatar className="h-5 w-5"><AvatarFallback className="text-[9px]">{initials(owner?.full_name ?? "?")}</AvatarFallback></Avatar>
-              <span>{owner?.full_name ?? "Unassigned"}</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-9 w-full items-center gap-1.5 rounded-md border border-input bg-transparent px-3 text-xs shadow-sm hover:bg-accent focus:outline-none focus:ring-1 focus:ring-ring sm:w-[170px]"
+                >
+                  <Avatar className="h-4 w-4 shrink-0">
+                    <AvatarFallback className="text-[8px]">{initials(owner?.full_name ?? "?")}</AvatarFallback>
+                  </Avatar>
+                  <span className="flex-1 truncate text-left">{owner?.full_name ?? "Unassigned"}</span>
+                  <svg className="h-4 w-4 shrink-0 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[170px]">
+                <DropdownMenuItem
+                  className="text-xs text-muted-foreground"
+                  onSelect={() => actions.updateLead(lead.id, { owner_id: null })}
+                >
+                  Unassigned
+                </DropdownMenuItem>
+                {profiles.map((p) => (
+                  <DropdownMenuItem
+                    key={p.id}
+                    className="text-xs"
+                    onSelect={() => actions.updateLead(lead.id, { owner_id: p.id })}
+                  >
+                    <Avatar className="h-5 w-5 shrink-0">
+                      <AvatarFallback className="text-[9px]">{initials(p.full_name ?? "?")}</AvatarFallback>
+                    </Avatar>
+                    <span className="truncate">{p.full_name ?? p.email ?? "Unknown"}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </KV>
           <KV label="Service type">
             <Select
               value={lead.service_type ?? undefined}
               onValueChange={(v) => actions.updateLead(lead.id, { service_type: (v || null) as any })}
             >
-              <SelectTrigger className="h-7 w-[170px] text-xs">
+              <SelectTrigger className="h-9 w-full text-xs sm:w-[170px]">
                 <SelectValue placeholder="Select service" />
               </SelectTrigger>
               <SelectContent>
@@ -204,9 +237,9 @@ function Row({
 
 function KV({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-muted-foreground">{label}</span>
-      <div className="text-right">{children}</div>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <span className="shrink-0 text-muted-foreground">{label}</span>
+      <div className="min-w-0 text-right">{children}</div>
     </div>
   );
 }
@@ -255,7 +288,7 @@ function EditableText({
       <span className={value ? "truncate" : "truncate text-muted-foreground"}>
         {value || placeholder || "—"}
       </span>
-      <Pencil className="h-3 w-3 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      <Pencil className="h-3 w-3 shrink-0 text-muted-foreground opacity-30 transition-opacity group-hover:opacity-100 md:opacity-0" />
     </button>
   );
 }
@@ -309,7 +342,7 @@ function ExternalEditable({
       <Button
         size="icon-sm"
         variant="ghost"
-        className="opacity-0 transition-opacity group-hover:opacity-100"
+        className="opacity-30 transition-opacity group-hover:opacity-100 md:opacity-0"
         onClick={() => setEditing(true)}
       >
         <Pencil className="h-3 w-3" />
@@ -319,7 +352,7 @@ function ExternalEditable({
           href={hrefBuilder ? hrefBuilder(value) : value}
           target="_blank"
           rel="noreferrer"
-          className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+          className="text-muted-foreground opacity-30 transition-opacity group-hover:opacity-100 md:opacity-0"
         >
           <ExternalLink className="h-3 w-3" />
         </a>
@@ -380,7 +413,7 @@ function QualForm({ leadId, qualification }: { leadId: string; qualification: Qu
             })
           }
         >
-          <SelectTrigger className="h-7 w-[90px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9 w-[90px] text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="yes">Yes</SelectItem>
             <SelectItem value="no">No</SelectItem>
@@ -412,7 +445,7 @@ function NumberEditable({ value, onSave }: { value: number | null; onSave: (v: n
   React.useEffect(() => setDraft(value?.toString() ?? ""), [value]);
   return (
     <Input
-      className="h-7 w-20 text-right font-mono text-xs"
+      className="h-9 w-20 text-right font-mono text-xs"
       value={draft}
       onChange={(e) => setDraft(e.target.value.replace(/[^\d]/g, ""))}
       onBlur={() => {
@@ -435,7 +468,7 @@ function DealForm({ deal }: { deal: Deal }) {
           const toIndex = overview.filter((l) => l.deal_stage === v && l.deal_id !== deal.id).length;
           actions.moveDeal(deal.id, v, toIndex);
         }}>
-          <SelectTrigger className="h-7 w-[140px] text-xs"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-9 w-full text-xs sm:w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             {stages.map((s) => (
               <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
@@ -445,7 +478,7 @@ function DealForm({ deal }: { deal: Deal }) {
       </KV>
       <KV label="MRR">
         <MoneyInput
-          className="h-7 w-[160px]"
+          className="h-9 w-full sm:w-[160px]"
           amount={deal.value_mrr ?? null}
           currency={deal.value_currency ?? "USD"}
           onAmountChange={(v) => actions.updateDeal(deal.id, { value_mrr: v ?? 0 })}
@@ -454,7 +487,7 @@ function DealForm({ deal }: { deal: Deal }) {
       </KV>
       <KV label="One-time">
         <MoneyInput
-          className="h-7 w-[160px]"
+          className="h-9 w-full sm:w-[160px]"
           amount={deal.value_one_time ?? null}
           currency={deal.value_currency ?? "USD"}
           onAmountChange={(v) => actions.updateDeal(deal.id, { value_one_time: v ?? 0 })}
@@ -478,7 +511,7 @@ function DealForm({ deal }: { deal: Deal }) {
               expected_close_date: d ? d.toISOString().slice(0, 10) : null,
             })
           }
-          className="h-7 w-[150px] px-2 text-xs"
+          className="h-9 w-full px-2 text-xs sm:w-[150px]"
         />
       </KV>
     </div>
@@ -511,7 +544,7 @@ function TagsEditor({ value, onChange }: { value: string[]; onChange: (v: string
             {t}
             <button
               onClick={() => remove(t)}
-              className="ml-0.5 rounded-sm p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+              className="ml-0.5 rounded-sm p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
               aria-label={`Remove ${t}`}
             >
               <X className="h-2.5 w-2.5" />

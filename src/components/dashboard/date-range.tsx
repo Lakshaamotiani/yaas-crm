@@ -102,6 +102,13 @@ export function DateRangePicker({
   onChange: (r: Range) => void;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 540);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
   // Which draft does the calendar edit when the user clicks dates?
   const [target, setTarget] = React.useState<"range" | "compare">("range");
 
@@ -196,7 +203,7 @@ export function DateRangePicker({
           align="end"
           sideOffset={6}
           collisionPadding={16}
-          className="w-[540px] max-w-[calc(100vw-2rem)] overflow-hidden p-0"
+          className="w-[340px] max-w-[calc(100vw-2rem)] overflow-hidden p-0 sm:w-[540px]"
         >
           {/* Range presets */}
           <PresetSection
@@ -244,7 +251,7 @@ export function DateRangePicker({
 
             <Calendar
               mode="range"
-              numberOfMonths={2}
+              numberOfMonths={isMobile ? 1 : 2}
               defaultMonth={calendarSelected.from ?? value.from}
               selected={{ from: calendarSelected.from, to: calendarSelected.to }}
               onSelect={(r) => calendarOnSelect({ from: r?.from, to: r?.to })}

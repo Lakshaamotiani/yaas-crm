@@ -30,7 +30,7 @@ export function StageChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border bg-card px-1.5 py-0.5 text-[11px] font-medium tracking-tight text-foreground/80",
+        "inline-flex items-center gap-1.5 rounded-md border bg-card px-2 py-0.5 text-xs font-medium tracking-tight text-foreground/80",
         className,
       )}
     >

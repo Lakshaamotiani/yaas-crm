@@ -94,10 +94,10 @@ export default function PipelinePage() {
         }
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+            <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => setImportOpen(true)}>
               <Upload className="h-3.5 w-3.5" /> Import
             </Button>
-            <Button variant="outline" size="sm" asChild>
+            <Button size="sm" asChild>
               <Link href="/leads/new"><Plus /> Add Lead</Link>
             </Button>
           </>

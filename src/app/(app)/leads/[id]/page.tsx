@@ -61,7 +61,7 @@ export default function LeadDetailPage() {
       <div className="flex items-center justify-between px-4 pt-3 sm:px-6 sm:pt-4">
         <Link
           href="/pipeline"
-          className="inline-flex items-center gap-1 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex items-center gap-1 py-2 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Pipeline

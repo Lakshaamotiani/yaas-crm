@@ -63,7 +63,7 @@ const seeds: Seed[] = [
     company_name: "GrowFast", company_website: "growfast.in",
     youtube_url: null,
     company_industry: "B2B SaaS", company_size: "51-200",
-    deal: { stage: "scoping_call_done", value_mrr: 1500000, probability: 40, expected_close_date: "2026-06-20", value_currency: INR },
+    deal: { stage: "discovery", value_mrr: 1500000, probability: 40, expected_close_date: "2026-06-20", value_currency: INR },
     qualification: { budget_range: "₹15–20L/mo", decision_maker: true, fit_score: 82 },
     activities: [
       { type: "system", title: "Lead created", body: "Submitted via Tally form", status: "completed", due_at: null, completed_at: new Date(Date.now() - 2 * 86400000).toISOString(), metadata: {} },
@@ -80,7 +80,7 @@ const seeds: Seed[] = [
     company_name: "Clearstate", company_website: "clearstate.co",
     youtube_url: null,
     company_industry: "D2C / Consumer", company_size: "11-50",
-    deal: { stage: "pitch_done", value_mrr: 1200000, probability: 60, expected_close_date: "2026-05-30", value_currency: INR },
+    deal: { stage: "pitched", value_mrr: 1200000, probability: 60, expected_close_date: "2026-05-30", value_currency: INR },
     qualification: { budget_range: "₹10–15L/mo", decision_maker: true, fit_score: 88 },
     activities: [
       { type: "call", title: "Scoping call", body: "Very warm. Referred by Aspora contact.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 6 * 86400000).toISOString(), metadata: {} },
@@ -99,7 +99,7 @@ const seeds: Seed[] = [
     company_name: "InfraEdge", company_website: "infraedge.in",
     youtube_url: null,
     company_industry: "Enterprise Tech", company_size: "501-1000",
-    deal: { stage: "costing_sent", value_mrr: 2000000, probability: 50, expected_close_date: "2026-06-30", value_currency: INR },
+    deal: { stage: "verbal_yes", value_mrr: 2000000, probability: 50, expected_close_date: "2026-06-30", value_currency: INR },
     qualification: { budget_range: "₹20L+/mo", decision_maker: false, fit_score: 72 },
     activities: [
       { type: "call", title: "Scoping call", body: "Rajesh is not the final decision maker — CFO approval needed.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 13 * 86400000).toISOString(), metadata: {} },
@@ -118,7 +118,7 @@ const seeds: Seed[] = [
     company_name: "UrbanFit", company_website: "urbanfit.in",
     youtube_url: "https://youtube.com/@urbanfit",
     company_industry: "Health & Fitness", company_size: "11-50",
-    deal: { stage: "negotiating", value_mrr: 2000000, probability: 70, expected_close_date: "2026-05-25", value_currency: INR },
+    deal: { stage: "verbal_yes", value_mrr: 2000000, probability: 70, expected_close_date: "2026-05-25", value_currency: INR },
     qualification: { budget_range: "₹15–20L/mo", decision_maker: true, fit_score: 91 },
     activities: [
       { type: "call", title: "Scoping call", body: "Super enthusiastic. Has a clear vision for the series.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 20 * 86400000).toISOString(), metadata: {} },
@@ -137,10 +137,10 @@ const seeds: Seed[] = [
     company_name: "ZenoHealth", company_website: "zenohealth.in",
     youtube_url: null,
     company_industry: "Healthtech", company_size: "51-200",
-    deal: { stage: "closed_won", value_mrr: 1500000, probability: 100, expected_close_date: "2026-04-01", closed_at: new Date(Date.now() - 44 * 86400000).toISOString(), value_currency: INR },
+    deal: { stage: "email_confirmation", value_mrr: 1500000, probability: 100, expected_close_date: "2026-04-01", closed_at: new Date(Date.now() - 44 * 86400000).toISOString(), value_currency: INR },
     qualification: { budget_range: "₹15–20L/mo", decision_maker: true, fit_score: 94 },
     activities: [
-      { type: "stage_change", title: "Deal closed", body: "12-month retainer signed. ₹15L/mo. Nitesh briefed. Loveena onboarding.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 44 * 86400000).toISOString(), metadata: { from: "negotiating", to: "closed_won" } },
+      { type: "stage_change", title: "Deal closed", body: "12-month retainer signed. ₹15L/mo. Nitesh briefed. Loveena onboarding.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 44 * 86400000).toISOString(), metadata: { from: "verbal_yes", to: "email_confirmation" } },
     ],
   },
   {
@@ -153,10 +153,10 @@ const seeds: Seed[] = [
     company_name: "BrandCraft", company_website: "brandcraft.in",
     youtube_url: null,
     company_industry: "Marketing Agency", company_size: "11-50",
-    deal: { stage: "closed_lost", value_mrr: 0, value_one_time: 500000, probability: 0, value_currency: INR, closed_at: new Date(Date.now() - 55 * 86400000).toISOString() },
+    deal: { stage: "lost", value_mrr: 0, value_one_time: 500000, probability: 0, value_currency: INR, closed_at: new Date(Date.now() - 55 * 86400000).toISOString() },
     qualification: { budget_range: "₹5–10L/mo", decision_maker: false, fit_score: 45 },
     activities: [
-      { type: "stage_change", title: "Deal lost", body: "No decision-making authority. Board did not approve. Loss reason: decision maker misaligned.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 55 * 86400000).toISOString(), metadata: { from: "costing_sent", to: "closed_lost" } },
+      { type: "stage_change", title: "Deal lost", body: "No decision-making authority. Board did not approve. Loss reason: decision maker misaligned.", status: "completed", due_at: null, completed_at: new Date(Date.now() - 55 * 86400000).toISOString(), metadata: { from: "verbal_yes", to: "lost" } },
     ],
   },
   {
@@ -169,7 +169,7 @@ const seeds: Seed[] = [
     company_name: "StealthCo", company_website: null,
     youtube_url: null,
     company_industry: "Fintech", company_size: "1-10",
-    deal: { stage: "outreach_done", value_mrr: 2000000, probability: 20, expected_close_date: "2026-07-01", value_currency: INR },
+    deal: { stage: "discovery", value_mrr: 2000000, probability: 20, expected_close_date: "2026-07-01", value_currency: INR },
     qualification: { budget_range: "₹20L+/mo", decision_maker: true, fit_score: 65 },
     activities: [
       { type: "system", title: "Lead created", body: "Submitted via Tally form", status: "completed", due_at: null, completed_at: new Date(Date.now() - 3 * 86400000).toISOString(), metadata: {} },
@@ -259,7 +259,7 @@ function buildMockData(): MockData {
       lead_id: leadId,
       owner_id: s.owner_id,
       title: `${company.name} — ${s.service_type}`,
-      stage: s.deal.stage ?? "outreach_done",
+      stage: s.deal.stage ?? "new",
       value_mrr: s.deal.value_mrr ?? 0,
       value_one_time: s.deal.value_one_time ?? 0,
       value_currency: s.deal.value_currency ?? "INR",

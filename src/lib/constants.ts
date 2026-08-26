@@ -38,16 +38,22 @@ export const STAGE_TONE_OPTIONS: StageTone[] = [
   "new", "contacted", "booked", "held", "proposal", "negotiating", "won", "lost",
 ];
 
-/** YAAS Sales pipeline stages. */
+/** YAAS Sales pipeline stages — v2.
+ *  "Email confirmation" is the sales-close trigger (kind=won).
+ *  Stages after it (Legal → Paused) are post-close operationalisation,
+ *  also kind=won since the deal is already sealed. */
 export const DEFAULT_PIPELINE_STAGES: PipelineStage[] = [
-  { id: "new",                 label: "New",                 position: 0, kind: "open", tone: "new",         is_default: true },
-  { id: "outreach_done",       label: "Outreach Done",       position: 1, kind: "open", tone: "contacted",   is_default: false },
-  { id: "discovery_call_done", label: "Discovery Call Done", position: 2, kind: "open", tone: "booked",      is_default: false },
-  { id: "pitch_done",          label: "Pitch Done",          position: 3, kind: "open", tone: "held",        is_default: false },
-  { id: "proposal_sent",       label: "Proposal Sent",       position: 4, kind: "open", tone: "proposal",    is_default: false },
-  { id: "negotiating",         label: "Negotiating",         position: 5, kind: "open", tone: "negotiating", is_default: false },
-  { id: "closed_won",          label: "Closed Won",          position: 6, kind: "won",  tone: "won",         is_default: false },
-  { id: "closed_lost",         label: "Lost",                position: 7, kind: "lost", tone: "lost",        is_default: false },
+  { id: "new",                   label: "New",                   position: 0,  kind: "open", tone: "new",         is_default: true },
+  { id: "discovery",             label: "Discovery",             position: 1,  kind: "open", tone: "contacted",   is_default: false },
+  { id: "pitched",               label: "Pitched",               position: 2,  kind: "open", tone: "booked",      is_default: false },
+  { id: "verbal_yes",            label: "Verbal yes",            position: 3,  kind: "open", tone: "held",        is_default: false },
+  { id: "email_confirmation",    label: "Email confirmation",    position: 4,  kind: "won",  tone: "proposal",    is_default: false },
+  { id: "legal",                 label: "Legal",                 position: 5,  kind: "won",  tone: "won",         is_default: false },
+  { id: "contract_signed",       label: "Contract Signed",       position: 6,  kind: "won",  tone: "won",         is_default: false },
+  { id: "handed_to_content_ops", label: "Handed to Content Ops", position: 7,  kind: "won",  tone: "won",         is_default: false },
+  { id: "live",                  label: "Live",                  position: 8,  kind: "won",  tone: "won",         is_default: false },
+  { id: "paused",                label: "Paused",                position: 9,  kind: "won",  tone: "negotiating", is_default: false },
+  { id: "lost",                  label: "Lost",                  position: 10, kind: "lost", tone: "lost",        is_default: false },
 ];
 
 // --- Legacy static exports (fallbacks). Prefer the store hooks in

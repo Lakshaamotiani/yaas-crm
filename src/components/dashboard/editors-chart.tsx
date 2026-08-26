@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } f
 import type { LeadOverview } from "@/lib/types";
 import type { Range } from "./date-range";
 import { formatCurrency } from "@/lib/utils";
+import { useStageRoles } from "@/lib/store";
 
 interface DataPoint {
   date: string;
@@ -36,8 +37,13 @@ function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-function buildSeries(leads: LeadOverview[], from: Date, to: Date): DataPoint[] {
-  const wonLeads = leads.filter((l) => l.closed_at && l.deal_stage === "closed_won");
+function buildSeries(
+  leads: LeadOverview[],
+  from: Date,
+  to: Date,
+  isWon: (stage: string) => boolean,
+): DataPoint[] {
+  const wonLeads = leads.filter((l) => l.closed_at && isWon(l.deal_stage ?? ""));
   const revOnDay = new Map<string, number>();
   for (const l of wonLeads) {
     const key = dayKey(new Date(l.closed_at!));
@@ -58,10 +64,11 @@ function buildSeries(leads: LeadOverview[], from: Date, to: Date): DataPoint[] {
 }
 
 export function EditorsOverTimeChart({ leads, from, to, compare }: Props) {
-  const series = React.useMemo(() => buildSeries(leads, from, to), [leads, from, to]);
+  const { isWon } = useStageRoles();
+  const series = React.useMemo(() => buildSeries(leads, from, to, isWon), [leads, from, to, isWon]);
   const compareSeries = React.useMemo(
-    () => (compare ? buildSeries(leads, compare.from, compare.to) : null),
-    [leads, compare],
+    () => (compare ? buildSeries(leads, compare.from, compare.to, isWon) : null),
+    [leads, compare, isWon],
   );
 
   const data: DataPoint[] = series.map((pt, i) => ({

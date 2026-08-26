@@ -52,52 +52,44 @@ export function SalesScript({ defaultOpen = false, onUseInCall, scriptId }: Prop
           Single row, single source of truth for the script name — no
           redundant dropdown trigger competing for the same horizontal space.
           Script switching lives inside the expanded body. */}
-      <CollapsibleTrigger asChild>
-        <button className="flex w-full items-center gap-2.5 p-3 text-left">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
-            <FileText className="h-4 w-4" />
-          </div>
-          <span className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-tight">
-            {script.name}
-          </span>
-          {totalMin ? (
-            <span className="hidden shrink-0 items-center gap-1 rounded-md border bg-card px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground sm:inline-flex">
-              <Clock className="h-2.5 w-2.5" />
-              ~{totalMin} min
+      <div className="flex items-center">
+        <CollapsibleTrigger asChild>
+          <button className="flex min-w-0 flex-1 items-center gap-2.5 p-3 text-left">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+              <FileText className="h-4 w-4" />
+            </div>
+            <span className="min-w-0 flex-1 truncate text-[13px] font-semibold tracking-tight">
+              {script.name}
             </span>
-          ) : null}
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-              !open && "-rotate-90",
-            )}
-          />
-          {onUseInCall ? (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.stopPropagation();
-                onUseInCall(script.id);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onUseInCall(script.id);
-                }
-              }}
+            {totalMin ? (
+              <span className="hidden shrink-0 items-center gap-1 rounded-md border bg-card px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-muted-foreground sm:inline-flex">
+                <Clock className="h-2.5 w-2.5" />
+                ~{totalMin} min
+              </span>
+            ) : null}
+            <ChevronDown
               className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-2 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                !open && "-rotate-90",
               )}
-            >
-              <Phone className="h-3.5 w-3.5" />
-              Use in call
-            </span>
-          ) : null}
-        </button>
-      </CollapsibleTrigger>
+            />
+          </button>
+        </CollapsibleTrigger>
+        {onUseInCall ? (
+          <button
+            type="button"
+            onClick={() => onUseInCall(script.id)}
+            className={cn(
+              "mr-3 inline-flex h-9 shrink-0 items-center gap-2 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+            )}
+          >
+            <Phone className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Use in call</span>
+            <span className="sm:hidden">Call</span>
+          </button>
+        ) : null}
+      </div>
 
       <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
         <div className="space-y-4 border-t px-4 py-4">

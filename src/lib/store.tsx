@@ -181,11 +181,21 @@ function reducer(state: State, action: Action): State {
           d.id === action.id ? { ...d, ...action.patch, updated_at: new Date().toISOString() } : d,
         ),
       };
-    case "reconcile_deal":
+    case "reconcile_deal": {
+      // Primary match by id. If no id match exists (optimistic deal has a
+      // client UUID while the bootstrap trigger assigns a server UUID),
+      // fall back to matching by lead_id so the optimistic placeholder is
+      // correctly replaced with the authoritative server row.
+      const hasIdMatch = state.deals.some((d) => d.id === action.deal.id);
       return {
         ...state,
-        deals: state.deals.map((d) => (d.id === action.deal.id ? action.deal : d)),
+        deals: state.deals.map((d) =>
+          hasIdMatch
+            ? d.id === action.deal.id ? action.deal : d
+            : d.lead_id === action.deal.lead_id ? action.deal : d,
+        ),
       };
+    }
     case "move_deal": {
       const moving = state.deals.find((d) => d.id === action.id);
       if (!moving) return state;
@@ -1124,6 +1134,16 @@ export function useActions() {
       const { before, after } = diffPatch(prev, patch);
       if (Object.keys(after).length === 0) return; // no-op edit
 
+      // When owner changes, keep the deal's owner_id in sync so both tables
+      // agree. The deal owner isn't displayed separately, but keeping it
+      // consistent prevents surprises in reports and integrations.
+      const deal = state.deals.find((d) => d.lead_id === id);
+      if ("owner_id" in patch && deal) {
+        const ownerPatch = { owner_id: patch.owner_id ?? null } as Partial<Deal>;
+        dispatch({ type: "update_deal", id: deal.id, patch: ownerPatch });
+        void updateDealRow(supabase, deal.id, ownerPatch);
+      }
+
       dispatch({ type: "update_lead", id, patch });
       void persist(
         "Update lead",
@@ -1139,6 +1159,10 @@ export function useActions() {
             updateLeadRow(supabase, id, before)
               .then((rev) => dispatch({ type: "reconcile_lead", lead: rev }))
               .catch((err) => toast.error(`Undo failed: ${err.message}`));
+            if (deal && "owner_id" in before) {
+              const revertOwner = { owner_id: before.owner_id ?? null } as Partial<Deal>;
+              void updateDealRow(supabase, deal.id, revertOwner);
+            }
             if (auditId) markAuditUndone(auditId);
           });
         },
@@ -1493,10 +1517,20 @@ export function useActions() {
       dispatch({ type: "add_activity", activity });
       void persist(
         "Log activity",
-        () => insertActivityRow(supabase, {
+        async () => {
+          // If this lead was just created, the optimistic deal id in
+          // activity.deal_id is a client UUID that doesn't exist in the DB
+          // yet. Wait for the bootstrap trigger to resolve and use the real
+          // server-side deal id so the FK constraint is satisfied.
+          let dealId = activity.deal_id;
+          if (pendingLeadCreates.has(input.lead_id)) {
+            const realDeal = await pendingLeadCreates.get(input.lead_id);
+            if (realDeal) dealId = realDeal.id;
+          }
+          return insertActivityRow(supabase, {
           id: activity.id,
           lead_id: activity.lead_id,
-          deal_id: activity.deal_id,
+          deal_id: dealId,
           user_id: activity.user_id,
           type: activity.type,
           status: activity.status,
@@ -1505,7 +1539,8 @@ export function useActions() {
           metadata: activity.metadata,
           due_at: activity.due_at,
           completed_at: activity.completed_at,
-        }),
+          });
+        },
         (reconciled) => dispatch({ type: "reconcile_activity", activity: reconciled }),
         () => dispatch({ type: "remove_activity", id: activity.id }),
       );

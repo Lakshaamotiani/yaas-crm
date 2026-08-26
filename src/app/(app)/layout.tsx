@@ -94,7 +94,7 @@ function MobileAppBar() {
         type="button"
         onClick={toggleMobile}
         aria-label="Open navigation"
-        className="-ml-1 grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+        className="-ml-2 grid h-11 w-11 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground active:bg-accent"
       >
         <Menu className="h-4 w-4" />
       </button>

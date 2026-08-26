@@ -89,7 +89,7 @@ function AddTaskTrigger({ leadId }: { leadId: string }) {
           <Plus className="h-3.5 w-3.5" /> Add task
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[320px] space-y-3 p-3">
+      <PopoverContent align="end" className="w-[320px] max-w-[calc(100vw-1rem)] space-y-3 p-3">
         <FieldText
           id="task-title"
           label="Task"
@@ -177,7 +177,7 @@ function ScheduleMeetingTrigger({ leadId }: { leadId: string }) {
           <CalendarDays className="h-3.5 w-3.5" /> Schedule meeting
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[340px] space-y-3 p-3">
+      <PopoverContent align="end" className="w-[340px] max-w-[calc(100vw-1rem)] space-y-3 p-3">
         <FieldText
           id="meeting-title"
           label="Meeting"
@@ -340,7 +340,7 @@ function Chip({ children, onClick }: { children: React.ReactNode; onClick: () =>
     <button
       type="button"
       onClick={onClick}
-      className="rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+      className="rounded-md border border-border bg-card px-2 py-1.5 text-[11px] text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground active:bg-accent"
     >
       {children}
     </button>
