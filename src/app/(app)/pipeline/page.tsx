@@ -25,6 +25,7 @@ function exportToCsv(
   rows: LeadOverview[],
   stageLabel: (id: string) => string,
   allActivities: Activity[],
+  ownerMap: Record<string, string>,
 ) {
   const esc = (v: string | null | undefined) => {
     if (v == null) return "";
@@ -45,7 +46,7 @@ function exportToCsv(
 
   const headers = [
     "Name", "Company", "Email", "Phone", "Role",
-    "Stage", "Source", "Service Type",
+    "Stage", "Owner", "Source", "Service Type",
     "MRR", "One-time", "Currency", "Probability", "Expected Close",
     "Fit Score", "Tags", "Notes", "Created At",
   ];
@@ -59,6 +60,7 @@ function exportToCsv(
         esc(l.phone),
         esc(l.role),
         esc(l.deal_stage ? stageLabel(l.deal_stage) : null),
+        esc(l.owner_id ? ownerMap[l.owner_id] : null),
         esc(l.source),
         esc(l.service_type),
         esc(l.value_mrr != null ? String(l.value_mrr) : null),
@@ -91,6 +93,10 @@ export default function PipelinePage() {
   const stageLabelMap = React.useMemo(
     () => Object.fromEntries(stages.map((s) => [s.id, s.label])),
     [stages],
+  );
+  const ownerMap = React.useMemo(
+    () => Object.fromEntries(profiles.map((p) => [p.id, p.full_name ?? "Unknown"])),
+    [profiles],
   );
   const [view, setView] = React.useState<"kanban" | "list">("kanban");
 
@@ -166,7 +172,7 @@ export default function PipelinePage() {
               variant="outline"
               size="sm"
               className="hidden sm:inline-flex"
-              onClick={() => exportToCsv(filtered, (id) => stageLabelMap[id] ?? id, allActivities)}
+              onClick={() => exportToCsv(filtered, (id) => stageLabelMap[id] ?? id, allActivities, ownerMap)}
             >
               <Download className="h-3.5 w-3.5" /> Export CSV
             </Button>
