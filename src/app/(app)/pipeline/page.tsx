@@ -16,24 +16,38 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { KanbanBoard } from "@/components/pipeline/kanban-board";
 import { ListView } from "@/components/pipeline/list-view";
-import { useOverview, useProfiles, useTemplates, useStageRoles, usePipelineStages } from "@/lib/store";
+import { useOverview, useProfiles, useTemplates, useStageRoles, usePipelineStages, useStoreActivities } from "@/lib/store";
 import { cn, formatCurrency, initials } from "@/lib/utils";
-import type { LeadOverview } from "@/lib/types";
+import type { LeadOverview, Activity } from "@/lib/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-function exportToCsv(rows: LeadOverview[], stageLabel: (id: string) => string) {
+function exportToCsv(
+  rows: LeadOverview[],
+  stageLabel: (id: string) => string,
+  allActivities: Activity[],
+) {
   const esc = (v: string | null | undefined) => {
     if (v == null) return "";
     const s = String(v);
+    // Always quote if contains comma, quote, or newline
     return s.includes(",") || s.includes('"') || s.includes("\n")
       ? `"${s.replace(/"/g, '""')}"`
       : s;
   };
+
+  // Build a map: lead_id -> notes joined by " | "
+  const notesMap = new Map<string, string>();
+  for (const a of allActivities) {
+    if (a.type !== "note" || !a.body) continue;
+    const existing = notesMap.get(a.lead_id);
+    notesMap.set(a.lead_id, existing ? `${existing} | ${a.body}` : a.body);
+  }
+
   const headers = [
     "Name", "Company", "Email", "Phone", "Role",
     "Stage", "Source", "Service Type",
     "MRR", "One-time", "Currency", "Probability", "Expected Close",
-    "Fit Score", "Tags", "Created At",
+    "Fit Score", "Tags", "Notes", "Created At",
   ];
   const lines = [
     headers.join(","),
@@ -54,6 +68,7 @@ function exportToCsv(rows: LeadOverview[], stageLabel: (id: string) => string) {
         esc(l.expected_close_date),
         esc(l.fit_score != null ? String(l.fit_score) : null),
         esc(l.tags?.join("; ")),
+        esc(notesMap.get(l.id)),
         esc(l.created_at ? l.created_at.slice(0, 10) : null),
       ].join(",")
     ),
@@ -72,6 +87,7 @@ export default function PipelinePage() {
   const profiles = useProfiles();
   const { sourceLabels } = useTemplates();
   const stages = usePipelineStages();
+  const allActivities = useStoreActivities();
   const stageLabelMap = React.useMemo(
     () => Object.fromEntries(stages.map((s) => [s.id, s.label])),
     [stages],
@@ -150,7 +166,7 @@ export default function PipelinePage() {
               variant="outline"
               size="sm"
               className="hidden sm:inline-flex"
-              onClick={() => exportToCsv(filtered, (id) => stageLabelMap[id] ?? id)}
+              onClick={() => exportToCsv(filtered, (id) => stageLabelMap[id] ?? id, allActivities)}
             >
               <Download className="h-3.5 w-3.5" /> Export CSV
             </Button>
