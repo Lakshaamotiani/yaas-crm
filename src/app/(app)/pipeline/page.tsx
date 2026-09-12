@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Search, KanbanSquare, List, SlidersHorizontal, Plus,
-  X, Check, Eye, EyeOff, Upload,
+  X, Check, Eye, EyeOff, Upload, Download,
 } from "lucide-react";
 import { ImportDialog } from "@/components/pipeline/import-dialog";
 import { PageHeader } from "@/components/page-header";
@@ -16,14 +16,66 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { KanbanBoard } from "@/components/pipeline/kanban-board";
 import { ListView } from "@/components/pipeline/list-view";
-import { useOverview, useProfiles, useTemplates, useStageRoles } from "@/lib/store";
+import { useOverview, useProfiles, useTemplates, useStageRoles, usePipelineStages } from "@/lib/store";
 import { cn, formatCurrency, initials } from "@/lib/utils";
+import type { LeadOverview } from "@/lib/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+function exportToCsv(rows: LeadOverview[], stageLabel: (id: string) => string) {
+  const esc = (v: string | null | undefined) => {
+    if (v == null) return "";
+    const s = String(v);
+    return s.includes(",") || s.includes('"') || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+  const headers = [
+    "Name", "Company", "Email", "Phone", "Role",
+    "Stage", "Source", "Service Type",
+    "MRR", "One-time", "Currency", "Probability", "Expected Close",
+    "Fit Score", "Tags", "Created At",
+  ];
+  const lines = [
+    headers.join(","),
+    ...rows.map((l) =>
+      [
+        esc(l.name),
+        esc(l.company?.name),
+        esc(l.email),
+        esc(l.phone),
+        esc(l.role),
+        esc(l.deal_stage ? stageLabel(l.deal_stage) : null),
+        esc(l.source),
+        esc(l.service_type),
+        esc(l.value_mrr != null ? String(l.value_mrr) : null),
+        esc(l.value_one_time != null ? String(l.value_one_time) : null),
+        esc(l.value_currency),
+        esc(l.probability != null ? String(l.probability) : null),
+        esc(l.expected_close_date),
+        esc(l.fit_score != null ? String(l.fit_score) : null),
+        esc(l.tags?.join("; ")),
+        esc(l.created_at ? l.created_at.slice(0, 10) : null),
+      ].join(",")
+    ),
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `pipeline_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function PipelinePage() {
   const leads = useOverview();
   const profiles = useProfiles();
   const { sourceLabels } = useTemplates();
+  const stages = usePipelineStages();
+  const stageLabelMap = React.useMemo(
+    () => Object.fromEntries(stages.map((s) => [s.id, s.label])),
+    [stages],
+  );
   const [view, setView] = React.useState<"kanban" | "list">("kanban");
 
   // Kanban doesn't fit on a phone (horizontal scroll across 7 columns + DnD
@@ -94,6 +146,14 @@ export default function PipelinePage() {
         }
         actions={
           <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden sm:inline-flex"
+              onClick={() => exportToCsv(filtered, (id) => stageLabelMap[id] ?? id)}
+            >
+              <Download className="h-3.5 w-3.5" /> Export CSV
+            </Button>
             <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => setImportOpen(true)}>
               <Upload className="h-3.5 w-3.5" /> Import
             </Button>
